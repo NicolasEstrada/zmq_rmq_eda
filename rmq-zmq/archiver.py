@@ -30,3 +30,20 @@ Arguments:
 
 __author__ = "Nicolas Estrada"
 __version__ = "0.0.1"
+
+import zmq
+
+context = zmq.Context()
+archiver = context.socket(zmq.SUB)
+archiver.connect("tcp://localhost:12001")
+archiver.setsockopt(zmq.SUBSCRIBE, b"routing_key.example")
+
+try:
+    while True:
+        rkey, message = archiver.recv_multipart()
+        print("Received message: [%s] RKEY: [%s]" % (message, rkey))
+
+except Exception, e:
+    archiver.close()
+    context.term()
+    raise e

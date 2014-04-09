@@ -37,3 +37,24 @@ optional arguments:
 
 __author__ = "Nicolas Estrada"
 __version__ = "0.0.1"
+
+import time
+
+import zmq
+
+# Connecting ..,
+context = zmq.Context()
+feeder = context.socket(zmq.PUSH)
+feeder.connect("tcp://localhost:10001")
+
+try:
+    while True:
+        rkey = b"routing_key.example"
+        message = b"MESSAGE"
+        feeder.send_multipart([rkey, message])
+
+        print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+        time.sleep(1)
+except:
+    feeder.close()
+    context.term()
