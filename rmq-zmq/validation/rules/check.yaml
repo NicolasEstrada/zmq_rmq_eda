@@ -1,0 +1,9 @@
+validations:
+    id: integer
+    userid: userid
+    datetime: datetime
+    checkeduserid: userid
+required:
+    - userid
+    - datetime
+    - checkeduserid

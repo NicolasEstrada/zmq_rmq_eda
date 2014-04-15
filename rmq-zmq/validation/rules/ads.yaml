@@ -1,0 +1,7 @@
+validations:
+    userid: userid
+    datetime: datetime
+    partnername: omit
+required:
+    - userid
+    - datetime

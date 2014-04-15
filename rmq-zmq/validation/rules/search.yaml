@@ -1,0 +1,3 @@
+validations:
+    userid: userid
+    datetime: datetime

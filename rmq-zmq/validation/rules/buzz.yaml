@@ -1,0 +1,7 @@
+validations:
+    userid: userid
+    datetime: datetime
+    filtertype: buzz_filtertype
+required:
+    - userid
+    - datetime

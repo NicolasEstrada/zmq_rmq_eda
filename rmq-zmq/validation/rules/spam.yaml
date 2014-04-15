@@ -1,0 +1,11 @@
+validations:
+    userid: userid
+    datetime: datetime
+    action: string
+    platform: string
+    userid: omit
+    email: string
+    captcharesponse: omit
+    captchachallenge: omit
+required:
+    - datetime

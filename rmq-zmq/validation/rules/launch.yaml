@@ -1,0 +1,14 @@
+validations:
+    app: dictionary
+    userid: userid
+    device: dictionary
+    deviceids: dictionary
+    location: dictionary
+    os: dictionary
+    ip: string
+    referrer: omit
+    datetime: datetime
+required:
+    - datetime
+    - deviceids
+    - device

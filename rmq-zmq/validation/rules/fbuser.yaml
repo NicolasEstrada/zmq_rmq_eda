@@ -1,0 +1,21 @@
+validations:
+  userid: userid
+  fbuserid: integer
+  valid:
+    type: enum
+    options: [1]
+  datetime: datetime
+  activated: datetime
+  deleted:
+    type: enum
+    options: [0, 1]
+  lastupdated: datetime
+  notificationcount: omit
+  fbphotoalbumid: omit
+  lastpromoted: omit
+  lastnotified: omit
+required:
+  - userid
+  - fbuserid
+  - valid
+  - datetime

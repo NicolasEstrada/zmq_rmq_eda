@@ -1,0 +1,8 @@
+validations:
+    userid: userid
+    datetime: datetime
+    allowlocation: boolean
+    allowpush: boolean
+required:
+    - datetime
+    - userid
