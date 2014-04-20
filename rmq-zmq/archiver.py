@@ -29,6 +29,8 @@ Arguments:
 
 """
 
+# python archiver.py -v thesis -rk routing_key.example -s thesis -posto plain
+
 from __future__ import division
 
 __author__ = "Nicolas Estrada"
@@ -327,41 +329,23 @@ def main():
     """
 
     context = zmq.Context()
-    archiver = context.socket(zmq.SUB)
+    archiver = context.socket(zmq.PULL)
     archiver.connect("tcp://localhost:12001")
-    archiver.setsockopt(zmq.SUBSCRIBE, config['routing_key'][0])
 
     try:
         with MessageProfiler(True) as mp:
             while True:
                 rkey, message = archiver.recv_multipart()
                 mp.msg_received(sys.getsizeof(rkey + message))
-
                 # print("Received message: [%s] RKEY: [%s]" % (message, rkey))
                 handle_message(message, rkey)
 
     except Exception, e:
         archiver.close()
         context.term()
-        return
+        raise e
 
 if __name__ == '__main__':
     logger.info('Starting the Archiver')
     main()
     logger.info('Archiver is resting in peace')
-
-
-# context = zmq.Context()
-# archiver = context.socket(zmq.SUB)
-# archiver.connect("tcp://localhost:12001")
-# archiver.setsockopt(zmq.SUBSCRIBE, b"routing_key.example")
-
-# try:
-#     while True:
-#         rkey, message = archiver.recv_multipart()
-#         print("Received message: [%s] RKEY: [%s]" % (message, rkey))
-
-# except Exception, e:
-#     archiver.close()
-#     context.term()
-#     raise e

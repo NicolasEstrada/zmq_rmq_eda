@@ -1,0 +1,9 @@
+default_python_exec: python
+pid_file: watcher_feeders_test2.pid
+polling_time: 60
+
+
+processes:
+  archivers:
+    script: /home/nicolas/thesis/rmq-zmq/feeder.py
+    instances: 1
