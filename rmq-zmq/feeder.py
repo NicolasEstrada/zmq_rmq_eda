@@ -45,7 +45,7 @@ import zmq
 
 from message_profiler import MessageProfiler
 
-# Connecting ..,
+# Connecting ...
 context = zmq.Context()
 feeder = context.socket(zmq.PUSH)
 feeder.connect("tcp://localhost:10001")
@@ -59,16 +59,15 @@ def send_message(socket, rkey, message):
 
 try:
     with MessageProfiler(True) as mp:
+        rkey = 'routing_key.example'
+        message = '{"datetime": 1234567890123, "data": "LOTS_OF_DATA_INSIDE_LARGE_STRING"}'
+        size_str = sys.getsizeof(rkey + message)
         while True:
-            # Get rkey from argsparse
-            rkey = 'routing_key.example'
-            message = '{"datetime": 1234567890123, "data": "LOTS_OF_DATA_INSIDE_LARGE_STRING"}'
             # feeder.send_multipart([rkey, message])
             send_message(feeder, rkey, message)
-            mp.msg_sent(sys.getsizeof(rkey + message))
-
+            mp.msg_sent(size_str)
             # print("Sent message [%s] RKEY: [%s]" % (message, rkey))
-            time.sleep(0.001)
+            time.sleep(0.00001)
 except:
     feeder.close()
     context.term()

@@ -1,9 +1,12 @@
 import time
 
-LOG_STR = ("Elapsed time: {0} ms | Messages received: {1} | "
-           "Messages sent: {2} | Bytes in: {3} | Bytes out: {4} | "
-           "Messages in ratio: {5} msg/s | Messages out ratio: {6} msg/s | "
-           "Bytes in ratio: {7} b/s | Bytes out ratio: {8}")
+# LOG_STR = ("Elapsed time: {0} ms | Messages received: {1} | "
+#            "Messages sent: {2} | Bytes in: {3} | Bytes out: {4} | "
+#            "Messages in ratio: {5} msg/s | Messages out ratio: {6} msg/s | "
+#            "Bytes in ratio: {7} b/s | Bytes out ratio: {8}")
+
+LOG_STR = "{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}"
+
 
 class MessageProfiler(object):
     def __init__(self, verbose=False):
