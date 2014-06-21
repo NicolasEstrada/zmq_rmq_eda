@@ -1,0 +1,20 @@
+validations:
+    userid: userid
+    deviceid: string
+    devicetype: string
+    brand: string
+    model: string
+    network: string
+    version: string
+    url: string
+    partnername: string
+    publisher: string
+    requesttype: integer
+    points: integer
+    ipaddress: string
+    error: boolean
+    message: string
+    datetime: datetime
+required:
+    - userid
+    - datetime

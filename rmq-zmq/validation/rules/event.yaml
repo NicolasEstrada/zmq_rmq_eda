@@ -1,0 +1,6 @@
+validations:
+    userid: userid
+    datetime: datetime
+    eventname:
+        type: enum
+        options: [550]

@@ -1,0 +1,9 @@
+validations:
+    userid: userid
+    datetime: datetime
+    type: integer
+    points: points
+    package: omit
+required:
+    - datetime
+    - userid

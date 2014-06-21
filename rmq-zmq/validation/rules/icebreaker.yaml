@@ -1,0 +1,12 @@
+validations:
+    userid: userid
+    viewerid: userid
+    senderid: userid
+    blockerid: userid
+    datetime: datetime
+    devicetype: device_type
+    points_balance: points
+    giftid: integer
+required:
+    - datetime
+    - blockerid

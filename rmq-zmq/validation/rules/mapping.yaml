@@ -1,0 +1,16 @@
+validations:
+    userid: userid
+    friendid: userid
+    datetime: datetime
+    mappingstatus:
+        type: enum
+        options: [3, 4]
+    initiator:
+        type: enum
+        options: [0, 1]
+required:
+    - userid
+    - friendid
+    - datetime
+    - mappingstatus
+    - initiator

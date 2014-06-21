@@ -1,0 +1,7 @@
+validations:
+    userid: userid
+    datetime: datetime
+    bid: bid
+required:
+    - datetime
+    - userid

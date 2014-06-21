@@ -1,0 +1,28 @@
+validations:
+    userid: userid
+    datetime: datetime
+    eventid: integer
+    typeid: integer
+    reportuserid: userid
+    lockeduser: integer
+    deleted:
+        type: enum
+        options: [0, 1]
+    adminid: integer
+    admincomment: omit
+    commentid: omit
+    reasonid: integer
+    moderated:
+        type: enum
+        options: [0, 1]
+    lastupdate: datetime
+    resolutionid: integer
+    id: integer
+    creepscore: integer
+    applicationid: integer
+    noteid: integer
+    lastupdated: omit
+    comment: omit
+required:
+    - userid
+    - datetime
