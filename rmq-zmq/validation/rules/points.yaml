@@ -1,0 +1,12 @@
+validations:
+    userid: userid
+    datetime: datetime
+    network: string
+    brand: string
+    source: string
+    version: omit
+    points: omit
+    type: omit
+required:
+    - userid
+    - datetime

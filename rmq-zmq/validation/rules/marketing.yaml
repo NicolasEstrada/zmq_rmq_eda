@@ -1,0 +1,7 @@
+validations:
+    source: string
+    adref: string
+    devicetype: string
+    influencer: string
+required:
+    - datetime

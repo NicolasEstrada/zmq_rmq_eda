@@ -1,0 +1,14 @@
+validations:
+    userid: userid
+    from: integer
+    to: integer
+    source: passport_source
+    expires: integer
+    datetime: datetime
+    viewerid: userid
+    vieweeid: omit
+    points: points
+    pushtype: omit
+required:
+    - userid
+    - datetime

@@ -1,0 +1,21 @@
+validations:
+    userid: userid
+    invitor: userid
+    datetime: datetime
+    inviteType:
+        type: enum
+        options: [1, 2, 3]
+    inviteSource:
+        type: enum
+        options: [1, 2, 3]
+    invitorDeviceType: device_type
+    inviterDeviceType: device_type
+    numSent: integer
+    inviteefbId: integer
+    invitorfbId: integer
+    friendInSkout: boolean
+    isNewClick: boolean
+required:
+    - datetime
+    - [userid, invitor]
+    - [inviteType, inviteSource, isNewClick]

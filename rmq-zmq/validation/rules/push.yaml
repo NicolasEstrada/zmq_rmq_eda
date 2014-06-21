@@ -1,0 +1,8 @@
+validations:
+    userid: userid
+    datetime: datetime
+    pushtype: pushtype
+    config: omit
+required:
+    - userid
+    - datetime

@@ -1,0 +1,5 @@
+thesis:
+  host: localhost
+  storage_path: /Users/mani/data/Kraken/hourly-archiver/messages
+  valid_path: /Users/mani/data/Kraken/hourly-archiver/valid
+  invalid_path: /Users/mani/data/Kraken/hourly-archiver/invalid
