@@ -1,0 +1,10 @@
+validations:
+    userid: userid
+    userids: userids
+    datetime: datetime
+    messages: integer
+    messagecount: integer
+    recentshakeruserid: userid
+required:
+    - datetime
+    - [userid, userids]

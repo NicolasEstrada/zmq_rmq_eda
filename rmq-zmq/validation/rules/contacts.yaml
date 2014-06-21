@@ -1,0 +1,11 @@
+validations:
+    userid: userid
+    datetime: datetime
+    contactid: userid
+    type: string
+    opens_to: string
+    accept: boolean
+    source: string
+required:
+    - userid
+    - datetime

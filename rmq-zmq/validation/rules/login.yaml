@@ -1,0 +1,14 @@
+validations:
+    id: integer
+    userid: userid
+    datetime: datetime
+    ui: ui
+    useragent:
+        type: useragent
+        alias: deviceid
+    phonebrand: string
+    phonemodel: string
+required:
+    - userid
+    - datetime
+    - ui

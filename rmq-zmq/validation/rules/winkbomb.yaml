@@ -1,0 +1,9 @@
+validations:
+    userid: userid
+    datetime: datetime
+    winks: integer
+    message: string
+    settings: dictionary
+required:
+    - datetime
+    - userid

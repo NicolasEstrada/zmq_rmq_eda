@@ -37,3 +37,38 @@ optional arguments:
 
 __author__ = "Nicolas Estrada"
 __version__ = "0.0.1"
+
+import sys
+import time
+
+import zmq
+
+from message_profiler import MessageProfiler
+
+# Connecting ..,
+context = zmq.Context()
+feeder = context.socket(zmq.PUSH)
+feeder.connect("tcp://localhost:10001")
+
+
+# @profile
+def send_message(socket, rkey, message):
+  socket.send_multipart([rkey, message])
+  return
+
+
+try:
+    with MessageProfiler(True) as mp:
+        while True:
+            # Get rkey from argsparse
+            rkey = 'routing_key.example'
+            message = '{"datetime": 1234567890123, "data": "LOTS_OF_DATA_INSIDE_LARGE_STRING"}'
+            # feeder.send_multipart([rkey, message])
+            send_message(feeder, rkey, message)
+            mp.msg_sent(sys.getsizeof(rkey + message))
+
+            # print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+            time.sleep(0.001)
+except:
+    feeder.close()
+    context.term()
