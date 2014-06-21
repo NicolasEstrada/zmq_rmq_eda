@@ -1,0 +1,8 @@
+validations:
+    userid: userid
+    datetime: datetime
+    longitude: longitude
+    latitude: latitude
+    update: dictionary
+    current: dictionary
+    devicetype: device_type

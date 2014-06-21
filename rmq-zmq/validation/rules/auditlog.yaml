@@ -1,0 +1,6 @@
+validations:
+    userid: userid
+    datetime: datetime
+    audittype:
+        type: enum
+        options: [100, 101, 102]
