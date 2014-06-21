@@ -1,0 +1,23 @@
+validations:
+    userid: userid
+    datetime: datetime
+    text: string
+    picture: boolean
+    buzzowneruserid: omit
+    "buzzowneruserid ": omit
+    buzzid: string
+    "buzzid ": string
+    commentid: omit
+    "commentid ": omit
+    commentowneruserid: userid
+    likeid: omit
+    "likeid ": omit
+    source: omit
+    lat: omit
+    lon: omit
+    brand: omit
+    version: omit
+    network: omit
+required:
+    - userid
+    - datetime

@@ -1,0 +1,22 @@
+validations:
+    userid: userid
+    datetime: datetime
+    sex:
+        type: enum
+        options: [0, 1, 2]
+    interestedin:
+        type: enum
+        options: [0, 1, 2]
+    birthday: birthday
+    longitude: longitude
+    latitude: latitude
+    city: location_string
+    state: location_string
+    country: location_string
+    deleted: integer
+    points: integer
+    pushenabled: omit
+    lastseen: omit
+    ethnicity: omit
+required:
+    - userid

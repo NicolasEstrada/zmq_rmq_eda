@@ -1,0 +1,8 @@
+validations:
+    userid: userid
+    datetime: datetime
+    status: omit
+    username: omit
+required:
+    - userid
+    - datetime

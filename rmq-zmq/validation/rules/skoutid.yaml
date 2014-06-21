@@ -1,0 +1,14 @@
+validations:
+    userid: userid
+    datetime: datetime
+    device: device
+    version: string
+    network: string
+    msg: dictionary
+    os: string
+    brand: string
+    allowlocation: boolean
+    allowpush: boolean
+required:
+    - datetime
+    - userid

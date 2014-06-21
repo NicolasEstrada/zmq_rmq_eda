@@ -1,0 +1,9 @@
+validations:
+    userid: userid
+    datetime: datetime
+    adminuserid: userid
+    feedback: omit
+    content: omit
+    email: omit
+required:
+    - datetime
