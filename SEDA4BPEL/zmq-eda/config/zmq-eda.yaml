@@ -9,6 +9,7 @@ client:
     port: 10000
     socket_type: PUSH
     message_type: creditInformationMessage
+    routing_key: loanService
 
 loanServicePT:
   incoming:
