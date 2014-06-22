@@ -1,23 +1,23 @@
 profiler:
-  client_send_ts: TIMESTAMP  # request sent
-  loanServicePT_ts: TIMESTAMP
-  loanServiceReplyPT_ts: TIMESTAMP
-  cleint_received_ts: TIMESTAMP  # response received
+  client_send_ts: 0  # request sent
+  loanServicePT_ts: 0
+  loanServiceReplyPT_ts: 0
+  client_received_ts: 0  # response received
 
 creditInformationMessage:
-  firstName: STRING
-  name: STRING
-  amount: AMOUNT_INTEGER
+  firstName: "FIRSTNAME"
+  name: "NAME"
+  amount: 0
   profiler: profiler
 
 approvalMessage:
-  accept: ACCEPT_STRING
+  accept: "ACCEPT_MESSAGE"
   profiler: profiler
 
 riskAssessmentMessage:
-  level: RISK_STRING
+  level: "low"
   profiler: profiler
 
 errorMessage:
-  errorCode: ERROR_INTEGER
+  errorCode: 0
   profiler: profiler

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import sys
+import json
 import time
+import random
 
 import zmq
 import yaml
@@ -72,6 +74,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-a',
         '--amount',
+        nargs='*',
         required=True,
         type=int,
         help='loan amont requested')
@@ -87,6 +90,7 @@ if __name__ == "__main__":
     message_patterns = yaml.load(args.patterns_file)
     generic_message = message_patterns[config['outgoing']['message_type']]
     generic_message.update({'profiler': message_patterns['profiler']})
+    message = generic_message
     # print config, '\n', '---------', '\n'
     # print message_patterns, '\n', '---------', '\n'
     # print generic_message, '\n', '---------', '\n'
@@ -100,13 +104,11 @@ if __name__ == "__main__":
         raise Exception("Value for amount must be greater than 0")
         sys.exit(1)
 
+    # print generic_message, '\n', '---------', '\n'
     values = {
         "firstName": args.first_name,
         "name": args.name,
-        "amount": args.amount}
-
-    generic_message.update(values)
-    # print generic_message, '\n', '---------', '\n'
+        "amount": random.choice(args.amount)}
 
     context = zmq.Context()
     # client_request = context.socket(zmq.PUSH)
@@ -119,13 +121,17 @@ if __name__ == "__main__":
 
     try:
         while True:
+            message.update(values)
+
             rkey = config['outgoing']['routing_key']
-            size_str = sys.getsizeof(rkey + generic_message)
-            client_request.send_multipart([rkey, generic_message])
-            # send_message(client_request, rkey, generic_message)
+            size_str = sys.getsizeof(rkey + str(message))
+            message['profiler']['client_send_ts'] = time.time()
+            client_request.send_multipart([rkey, json.dumps(message)])
+            # send_message(client_request, rkey, message)
             # mp.msg_sent(size_str)
-            print("Sent message [%s] RKEY: [%s]" % (generic_message, rkey))
-            time.sleep(10)
+            print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+            time.sleep(120)
+            values.update({'amount': random.choice(args.amount)})
     except:
         client_request.close()
         context.term()
