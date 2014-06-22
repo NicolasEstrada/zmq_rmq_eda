@@ -1,0 +1,70 @@
+client:
+  incoming:
+    host: localhost
+    port: 40000
+    socket_type: PULL
+    message_type: approvalMessage
+  outgoing:
+    host: localhost
+    port: 10000
+    socket_type: PUSH
+    message_type: creditInformationMessage
+
+loanServicePT:
+  incoming:
+    host: localhost
+    port: 10000
+    socket_type: PULL
+    message_type: creditInformationMessage
+  outgoing:
+    host: localhost
+    port: 20000
+    socket_type: XPUB
+    message_type: creditInformationMessage
+    routing_key:
+      - riskAssesment
+      - loanApproval
+
+riskAssessmentPT:
+  incoming:
+    host: localhost
+    port: 20000
+    socket_type: SUB
+    message_type: creditInformationMessage
+  outgoing:
+    low_risk:
+      host: localhost
+      port: 30000
+      socket_type: PUSH
+      # involved_message_type: riskAssesmentMessage
+      message_type: approvalMessage
+    approval:
+      host: localhost
+      port: 20000
+      socket_type: XPUB
+      message_type: creditInformationMessage
+      routing_key: loanApproval
+
+loanApprovalPT:
+  incoming:
+    host: localhost
+    port: 20000
+    socket_type: SUB
+    message_type: creditInformationMessage
+  outgoing:
+    host: localhost
+    port: 30000
+    socket_type: PUSH
+    message_type: approvalMessage
+
+loanServiceReplyPT:
+  incoming:
+    host: localhost
+    port: 30000
+    socket_type: PULL
+    message_type: approvalMessage
+  outgoing:
+    host: localhost
+    port: 40000
+    socket_type: PUSH
+    message_type: approvalMessage
