@@ -39,6 +39,7 @@ riskAssessmentPT:
       socket_type: PUSH
       # involved_message_type: riskAssesmentMessage
       message_type: approvalMessage
+      routing_key: loanServiceReply
     approval:
       host: localhost
       port: 20000
@@ -52,11 +53,13 @@ loanApprovalPT:
     port: 20000
     socket_type: SUB
     message_type: creditInformationMessage
+    routing_key: loanApproval
   outgoing:
     host: localhost
     port: 30000
     socket_type: PUSH
     message_type: approvalMessage
+    routing_key: loanServiceReply
 
 loanServiceReplyPT:
   incoming:
@@ -64,6 +67,7 @@ loanServiceReplyPT:
     port: 30000
     socket_type: PULL
     message_type: approvalMessage
+    routing_key: clientResponse
   # outgoing:
   #   host: localhost
   #   port: 40000

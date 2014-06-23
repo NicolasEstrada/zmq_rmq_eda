@@ -73,6 +73,7 @@ if __name__ == "__main__":
 
             if rkey != 'loanService':
                 print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
+                continue
             
             message = json.loads(message)
 

@@ -2,6 +2,8 @@ profiler:
   client_send_ts: 0  # request sent
   loanServicePT_ts: 0
   loanServiceReplyPT_ts: 0
+  loanApprovalPT_ts: 0
+  riskAssessmentPT_ts: 0
   client_received_ts: 0  # response received
 
 creditInformationMessage:

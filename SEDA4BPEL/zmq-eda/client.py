@@ -125,7 +125,7 @@ if __name__ == "__main__":
             print("Sent message [%s] RKEY: [%s]" % (message, rkey))
 
             values.update({'amount': random.choice(args.amount)})
-            time.sleep(10)
+            time.sleep(5)
     except:
         client_request.close()
         context.term()
