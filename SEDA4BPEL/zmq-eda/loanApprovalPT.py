@@ -15,8 +15,8 @@ MAX_PORT = 65536  # not included
 
 ALLOWED_SOCKET_TYPES = ('PUSH', 'PULL', 'XPUB' ,'SUB')
 ALLOWED_MESSAGE_TYPES = (
-	'creditInformationMessage',
-	'approvalMessage')
+    'creditInformationMessage',
+    'approvalMessage')
 
 CONFIG_SECTION = 'loanApprovalPT'
 
@@ -60,6 +60,8 @@ if __name__ == "__main__":
         config['outgoing']['socket_type']))
 
     queue.connect("tcp://{host}:{port}".format(**config['incoming']))
+    # queue.connect("tcp://{host}:20001".format(**config['incoming']))
+    # TODO: how to consume form multiple port or multiple senders?
     queue.setsockopt(zmq.SUBSCRIBE, config['incoming']['routing_key'])
 
     pub.bind("tcp://*:{port}".format(**config['outgoing']))
@@ -83,7 +85,6 @@ if __name__ == "__main__":
             pub.send_multipart([rkey, json.dumps(message)])
             print("Sent message [%s] RKEY: [%s]" % (message, rkey))
     except:
-    	raise
         queue.close()
         pub.close()
         context.term()

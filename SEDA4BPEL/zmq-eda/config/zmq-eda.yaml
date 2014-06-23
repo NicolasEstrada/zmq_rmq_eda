@@ -32,6 +32,7 @@ riskAssessmentPT:
     port: 20000
     socket_type: SUB
     message_type: creditInformationMessage
+    routing_key: riskAssessment
   outgoing:
     low_risk:
       host: localhost
@@ -42,6 +43,7 @@ riskAssessmentPT:
       routing_key: loanServiceReply
     approval:
       host: localhost
+      # port: 20001  # Fix problem with used port
       port: 20000
       socket_type: XPUB
       message_type: creditInformationMessage
@@ -51,6 +53,7 @@ loanApprovalPT:
   incoming:
     host: localhost
     port: 20000
+    # port: 20000  # Receive form multiple ports to fix problem
     socket_type: SUB
     message_type: creditInformationMessage
     routing_key: loanApproval

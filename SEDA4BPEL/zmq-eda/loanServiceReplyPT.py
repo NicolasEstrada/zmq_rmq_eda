@@ -15,8 +15,8 @@ MAX_PORT = 65536  # not included
 
 ALLOWED_SOCKET_TYPES = ('PUSH', 'PULL', 'XPUB' ,'SUB')
 ALLOWED_MESSAGE_TYPES = (
-	'creditInformationMessage',
-	'approvalMessage')
+    'creditInformationMessage',
+    'approvalMessage')
 
 CONFIG_SECTION = 'loanServiceReplyPT'
 
