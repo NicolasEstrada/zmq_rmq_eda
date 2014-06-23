@@ -67,7 +67,7 @@ if __name__ == "__main__":
     queue.setsockopt(zmq.SUBSCRIBE, config['incoming']['routing_key'])
 
     pub_low.connect("tcp://{host}:{port}".format(**config['outgoing']['low_risk']))
-    pub_approval.bind("tcp://*:{port}".format(**config['outgoing']['approval']))
+    pub_approval.connect("tcp://{host}:{port}".format(**config['outgoing']['approval']))
 
     try:
         while True:

@@ -52,23 +52,41 @@ if __name__ == "__main__":
     # Getting context and defining bindings
     context = zmq.Context()
 
-    queue = context.socket(getattr(
+    queue_loan = context.socket(getattr(
         zmq,
-        config['incoming']['socket_type']))
+        config['incoming']['loanService']['socket_type']))
+    queue_risk = context.socket(getattr(
+        zmq,
+        config['incoming']['risk']['socket_type']))
     pub = context.socket(getattr(
         zmq,
         config['outgoing']['socket_type']))
 
-    queue.connect("tcp://{host}:{port}".format(**config['incoming']))
-    # queue.connect("tcp://{host}:20001".format(**config['incoming']))
-    # TODO: how to consume form multiple port or multiple senders?
-    queue.setsockopt(zmq.SUBSCRIBE, config['incoming']['routing_key'])
+    queue_loan.connect("tcp://{host}:{port}".format(**config['incoming']['loanService']))
+    queue_loan.setsockopt(zmq.SUBSCRIBE, config['incoming']['loanService']['routing_key'])
+
+    queue_risk.bind("tcp://*:{port}".format(**config['incoming']['risk']))
+    # queue_risk.connect("tcp://{host}:{port}".format(**config['incoming']['risk']))
+    # queue_risk.setsockopt(zmq.SUBSCRIBE, config['incoming']['risk']['routing_key'])
 
     pub.bind("tcp://*:{port}".format(**config['outgoing']))
 
+    poller = zmq.Poller()
+    poller.register(queue_loan, zmq.POLLIN)
+    poller.register(queue_risk, zmq.POLLIN)
+
     try:
         while True:
-            rkey, message = queue.recv_multipart()
+            socks = dict(poller.poll())
+
+            if socks.get(queue_loan) == zmq.POLLIN:
+                rkey, message = queue_loan.recv_multipart()
+            elif socks.get(queue_risk) == zmq.POLLIN:
+                rkey, message = queue_risk.recv_multipart()
+            else:
+                print("[WARNING] Wrong socket for message [%s] RKEY: [%s]" % (message, rkey))
+                continue
+
             print("Received message [%s] RKEY: [%s]" % (message, rkey))
 
             if rkey != 'loanApproval':
@@ -85,6 +103,7 @@ if __name__ == "__main__":
             pub.send_multipart([rkey, json.dumps(message)])
             print("Sent message [%s] RKEY: [%s]" % (message, rkey))
     except:
-        queue.close()
+        queue_loan.close()
+        queue_risk.close()
         pub.close()
         context.term()
