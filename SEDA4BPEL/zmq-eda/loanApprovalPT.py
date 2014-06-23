@@ -23,7 +23,7 @@ CONFIG_SECTION = 'loanApprovalPT'
 
 if __name__ == "__main__":
 
-    # Arguments for loanServicePT
+    # Arguments for loanApprovalPT
     parser = argparse.ArgumentParser(
         description="""Handler for loanApprovalPT that receives
         creditInformationMessages wait for 10 minutes, simulating
