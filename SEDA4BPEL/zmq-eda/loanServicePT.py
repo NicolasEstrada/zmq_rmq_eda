@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# python loanServicePT.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml -t 10000
+
 import sys
 import json
 import time

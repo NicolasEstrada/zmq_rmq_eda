@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# python client.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml -fn nico -n estrada -a 2000 1000 15000 3000 6000 500 300
+
 import sys
 import json
 import time
