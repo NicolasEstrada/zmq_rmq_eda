@@ -96,13 +96,14 @@ if __name__ == "__main__":
     # print generic_message, '\n', '---------', '\n'
 
     # Socket and servers options
-    if args.port:
+    if args.port and args.port > MIN_PORT and args.port < MAX_PORT:
         config['outgoing']['port'] = args.port
 
     # Client message specific values
-    if args.amount <= 0:
-        raise Exception("Value for amount must be greater than 0")
-        sys.exit(1)
+    for amount in args.amount:
+        if amount <= 0:
+            raise Exception("Value for amount must be greater than 0")
+            sys.exit(1)
 
     # print generic_message, '\n', '---------', '\n'
     values = {
