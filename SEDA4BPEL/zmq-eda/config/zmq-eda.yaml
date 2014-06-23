@@ -23,8 +23,8 @@ loanServicePT:
     socket_type: XPUB
     message_type: creditInformationMessage
     routing_key:
-      - riskAssessment
-      - loanApproval
+      low_amount: riskAssessment
+      high_amount: loanApproval
 
 riskAssessmentPT:
   incoming:

@@ -11,7 +11,6 @@ import argparse
 
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
-PORT_CHOICE = tuple(range(MIN_PORT, MAX_PORT + 1))
 
 ALLOWED_SOCKET_TYPES = ('PUSH', 'PULL', 'XPUB' ,'SUB')
 ALLOWED_MESSAGE_TYPES = ('creditInformationMessage')
@@ -81,9 +80,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # with open(args.config_file) as cfile:
-    #   config = yaml.load(args.config_file)[CONFIG_SECTION]
-
     # Config files dependencies
     config = yaml.load(args.config_file)[CONFIG_SECTION]
     # import pdb; pdb.set_trace()
@@ -91,9 +87,6 @@ if __name__ == "__main__":
     generic_message = message_patterns[config['outgoing']['message_type']]
     generic_message.update({'profiler': message_patterns['profiler']})
     message = generic_message
-    # print config, '\n', '---------', '\n'
-    # print message_patterns, '\n', '---------', '\n'
-    # print generic_message, '\n', '---------', '\n'
 
     # Socket and servers options
     if args.port and args.port > MIN_PORT and args.port < MAX_PORT:
@@ -105,14 +98,12 @@ if __name__ == "__main__":
             raise Exception("Value for amount must be greater than 0")
             sys.exit(1)
 
-    # print generic_message, '\n', '---------', '\n'
     values = {
         "firstName": args.first_name,
         "name": args.name,
         "amount": random.choice(args.amount)}
 
     context = zmq.Context()
-    # client_request = context.socket(zmq.PUSH)
     client_request = context.socket(getattr(
         zmq,
         config['outgoing']['socket_type']))
@@ -123,16 +114,16 @@ if __name__ == "__main__":
     try:
         while True:
             message.update(values)
-
             rkey = config['outgoing']['routing_key']
+
             size_str = sys.getsizeof(rkey + str(message))
+
             message['profiler']['client_send_ts'] = time.time()
             client_request.send_multipart([rkey, json.dumps(message)])
-            # send_message(client_request, rkey, message)
-            # mp.msg_sent(size_str)
             print("Sent message [%s] RKEY: [%s]" % (message, rkey))
-            time.sleep(120)
+
             values.update({'amount': random.choice(args.amount)})
+            time.sleep(10)
     except:
         client_request.close()
         context.term()
