@@ -78,7 +78,7 @@ if __name__ == "__main__":
             pub.send_multipart([
                 str(message['profiler']['client_id']),
                 json.dumps(message)])
-            print("Message pending send: [%s] RKEY: [%s]" % (message, rkey))
+            print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
     except:
         rcv.close()
         pub.close()

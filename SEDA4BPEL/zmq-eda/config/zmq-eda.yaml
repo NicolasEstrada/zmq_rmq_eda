@@ -66,7 +66,7 @@ loanApprovalPT:
       message_type: creditInformationMessage
       routing_key: loanApproval
   outgoing:
-    host: '*'
+    host: localhost
     port: 30000
     socket_type: PUSH
     message_type: approvalMessage
@@ -82,5 +82,5 @@ loanServiceReplyPT:
   outgoing:
     host: '*'
     port: 50000
-    socket_type: PUB
+    socket_type: XPUB
     message_type: approvalMessage

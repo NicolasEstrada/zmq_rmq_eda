@@ -151,13 +151,15 @@ if __name__ == "__main__":
 
             # Waiting loanService response to proceed
             rkey, message = client_receive.recv_multipart()
+            message = json.loads(message)
             message['profiler']['client_received_ts'] = time.time()
             print("Received message [%s] RKEY: [%s], Elapsed time: [%s] seconds" % (
                 message, rkey,
                 message['profiler']['client_received_ts'] - message['profiler']['client_send_ts']))
 
-            time.sleep(120)
+            time.sleep(5)
     except:
+        raise
         client_request.close()
         client_receive.close()
         context.term()
