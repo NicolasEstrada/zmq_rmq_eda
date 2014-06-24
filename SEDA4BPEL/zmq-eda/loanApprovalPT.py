@@ -10,6 +10,8 @@ import zmq
 import yaml
 import argparse
 
+from message_profiler import MessageProfiler
+
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
 APP_TIME = 600
@@ -84,32 +86,39 @@ if __name__ == "__main__":
     poller.register(queue_risk, zmq.POLLIN)
 
     try:
-        while True:
-            socks = dict(poller.poll())
+        with MessageProfiler(True) as mp:
 
-            if socks.get(queue_loan) == zmq.POLLIN:
-                rkey, message = queue_loan.recv_multipart()
-            elif socks.get(queue_risk) == zmq.POLLIN:
-                rkey, message = queue_risk.recv_multipart()
-            else:
-                print("[WARNING] Wrong socket for message [%s] RKEY: [%s]" % (message, rkey))
-                continue
+            while True:
+                socks = dict(poller.poll())
 
-            print("Received message [%s] RKEY: [%s]" % (message, rkey))
+                if socks.get(queue_loan) == zmq.POLLIN:
+                    rkey, message = queue_loan.recv_multipart()
+                elif socks.get(queue_risk) == zmq.POLLIN:
+                    rkey, message = queue_risk.recv_multipart()
+                else:
+                    print("[WARNING] Wrong socket for message [%s] RKEY: [%s]" % (message, rkey))
+                    continue
 
-            if rkey != 'loanApproval':
-                print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
-                continue
+                print("Received message [%s] RKEY: [%s]" % (message, rkey))
 
-            message = json.loads(message)
-            message['profiler']['loanApprovalPT_ts'] = time.time()
-            rkey = config['outgoing']['routing_key']
-            time.sleep(args.app_time)
+                if rkey != 'loanApproval':
+                    print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
+                    continue
 
-            size_str = sys.getsizeof(rkey + str(message))
+                message = json.loads(message)
+                message['profiler']['loanApprovalPT_ts'] = time.time()
+                rkey = config['outgoing']['routing_key']
+                time.sleep(args.app_time)
 
-            pub.send_multipart([rkey, json.dumps(message)])
-            print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.received(size_str)
+
+                pub.send_multipart([rkey, json.dumps(message)])
+                print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.sent(size_str)
+
     except:
         queue_loan.close()
         queue_risk.close()

@@ -10,6 +10,8 @@ import zmq
 import yaml
 import argparse
 
+from message_profiler import MessageProfiler
+
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
 
@@ -62,23 +64,30 @@ if __name__ == "__main__":
     pub.bind("tcp://{host}:{port}".format(**config['outgoing']))
 
     try:
-        while True:
-            rkey, message = rcv.recv_multipart()
-            print("Received message [%s] RKEY: [%s]" % (message, rkey))
+        with MessageProfiler(True) as mp:
 
-            if rkey != 'loanServiceReply':
-                print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
-                continue
-            
-            message = json.loads(message)
+            while True:
+                rkey, message = rcv.recv_multipart()
+                print("Received message [%s] RKEY: [%s]" % (message, rkey))
 
-            size_str = sys.getsizeof(rkey + str(message))
+                if rkey != 'loanServiceReply':
+                    print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
+                    continue
+                
+                message = json.loads(message)
 
-            message['profiler']['loanServiceReplyPT_ts'] = time.time()
-            pub.send_multipart([
-                str(message['profiler']['client_id']),
-                json.dumps(message)])
-            print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.received(size_str)
+
+                message['profiler']['loanServiceReplyPT_ts'] = time.time()
+                pub.send_multipart([
+                    str(message['profiler']['client_id']),
+                    json.dumps(message)])
+                print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
+
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.sent(size_str)
+
     except:
         rcv.close()
         pub.close()
