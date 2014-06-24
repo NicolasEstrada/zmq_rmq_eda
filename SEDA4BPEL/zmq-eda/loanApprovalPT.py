@@ -107,6 +107,7 @@ if __name__ == "__main__":
 
                 message = json.loads(message)
                 message['profiler']['loanApprovalPT_ts'] = time.time()
+                message['accept'] = 'yes'
                 rkey = config['outgoing']['routing_key']
                 time.sleep(args.app_time)
 
