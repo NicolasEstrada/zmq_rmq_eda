@@ -83,7 +83,6 @@ if __name__ == "__main__":
             size_str = sys.getsizeof(rkey + str(message))
 
             if random.randint(0,4):  # 80% for low risk
-            # if False:  gor testing
                 rkey = config['outgoing']['low_risk']['routing_key']
                 pub_low.send_multipart([rkey, json.dumps(message)])
             else:

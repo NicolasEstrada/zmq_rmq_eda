@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# python loanApprovalPT.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml
+# python loanApprovalPT.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml -at 10
 
 import sys
 import json
@@ -12,6 +12,7 @@ import argparse
 
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
+APP_TIME = 600
 
 ALLOWED_SOCKET_TYPES = ('PUSH', 'PULL', 'XPUB' ,'SUB')
 ALLOWED_MESSAGE_TYPES = (
@@ -43,6 +44,13 @@ if __name__ == "__main__":
         required=True,
         type=argparse.FileType('r'),
         help='file for message type format')
+    parser.add_argument(
+        '-at',
+        '--app_time',
+        required=True,
+        type=int,
+        default=APP_TIME,
+        help='approval time in seconds')
 
     args = parser.parse_args()
 
@@ -96,7 +104,7 @@ if __name__ == "__main__":
             message = json.loads(message)
             message['profiler']['loanApprovalPT_ts'] = time.time()
             rkey = config['outgoing']['routing_key']
-            time.sleep(15)  # original set sleep to 600
+            time.sleep(args.app_time)
 
             size_str = sys.getsizeof(rkey + str(message))
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# python client.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml -fn nico -n estrada -a 2000 1000 15000 3000 6000 500 300 -ci 50001
+# python client.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml -fn nico -n estrada -a 2000 1000 15000 3000 6000 500 300 -wt 5 -ci 50001
 
 import sys
 import json
@@ -14,6 +14,7 @@ import argparse
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
 MIN_CLIENT_ID = 50000 # not included
+WAIT_TIME = 120
 
 ALLOWED_SOCKET_TYPES = ('PUSH', 'PULL', 'XPUB' ,'SUB')
 ALLOWED_MESSAGE_TYPES = ('creditInformationMessage')
@@ -86,6 +87,13 @@ if __name__ == "__main__":
         required=True,
         type=int,
         help='loan amount requested')
+    parser.add_argument(
+        '-wt',
+        '--wait_time',
+        required=False,
+        type=int,
+        default=WAIT_TIME,
+        help='wait time in seconds between request response received and next request')
 
     args = parser.parse_args()
 
@@ -157,7 +165,7 @@ if __name__ == "__main__":
                 message, rkey,
                 message['profiler']['client_received_ts'] - message['profiler']['client_send_ts']))
 
-            time.sleep(5)
+            time.sleep(args.wait_time)
     except:
         raise
         client_request.close()
