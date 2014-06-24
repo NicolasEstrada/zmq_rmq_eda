@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # queue_risk.connect("tcp://{host}:{port}".format(**config['incoming']['risk']))
     # queue_risk.setsockopt(zmq.SUBSCRIBE, config['incoming']['risk']['routing_key'])
 
-    pub.bind("tcp://*:{port}".format(**config['outgoing']))
+    pub.connect("tcp://{host}:{port}".format(**config['outgoing']))
 
     poller = zmq.Poller()
     poller.register(queue_loan, zmq.POLLIN)

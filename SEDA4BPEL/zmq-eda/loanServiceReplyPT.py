@@ -58,7 +58,7 @@ if __name__ == "__main__":
     #     zmq,
     #     config['outgoing']['socket_type']))
 
-    rcv.connect("tcp://{host}:{port}".format(**config['incoming']))
+    rcv.bind("tcp://*:{port}".format(**config['incoming']))
     # pub.bind("tcp://*:{port}".format(**config['outgoing']))
 
     try:
