@@ -1,9 +1,9 @@
 client:
-  # incoming:
-  #   host: localhost
-  #   port: 40000
-  #   socket_type: PULL
-  #   message_type: approvalMessage
+  incoming:
+    host: localhost
+    port: 50000
+    socket_type: SUB
+    message_type: approvalMessage
   outgoing:
     host: localhost
     port: 10000
@@ -13,12 +13,12 @@ client:
 
 loanServicePT:
   incoming:
-    host: localhost
+    host: '*'
     port: 10000
     socket_type: PULL
     message_type: creditInformationMessage
   outgoing:
-    host: localhost
+    host: '*'
     port: 20000
     socket_type: XPUB
     message_type: creditInformationMessage
@@ -59,7 +59,7 @@ loanApprovalPT:
       message_type: creditInformationMessage
       routing_key: loanApproval
     risk:
-      host: localhost
+      host: '*'
       # port: 20001  # Fix problem with used port
       port: 40000
       socket_type: PULL
@@ -74,13 +74,13 @@ loanApprovalPT:
 
 loanServiceReplyPT:
   incoming:
-    host: localhost
+    host: '*'
     port: 30000
     socket_type: PULL
     message_type: approvalMessage
     routing_key: clientResponse
-  # outgoing:
-  #   host: localhost
-  #   port: 40000
-  #   socket_type: PUSH
-  #   message_type: approvalMessage
+  outgoing:
+    host: '*'
+    port: 50000
+    socket_type: XPUB
+    message_type: approvalMessage

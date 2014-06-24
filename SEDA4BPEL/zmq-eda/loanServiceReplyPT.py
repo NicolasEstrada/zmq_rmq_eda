@@ -54,12 +54,12 @@ if __name__ == "__main__":
     rcv = context.socket(getattr(
         zmq,
         config['incoming']['socket_type']))
-    # pub = context.socket(getattr(
-    #     zmq,
-    #     config['outgoing']['socket_type']))
+    pub = context.socket(getattr(
+        zmq,
+        config['outgoing']['socket_type']))
 
-    rcv.bind("tcp://*:{port}".format(**config['incoming']))
-    # pub.bind("tcp://*:{port}".format(**config['outgoing']))
+    rcv.bind("tcp://{host}:{port}".format(**config['incoming']))
+    pub.bind("tcp://{host}:{port}".format(**config['outgoing']))
 
     try:
         while True:
@@ -75,9 +75,11 @@ if __name__ == "__main__":
             size_str = sys.getsizeof(rkey + str(message))
 
             message['profiler']['loanServiceReplyPT_ts'] = time.time()
-            # pub.send_multipart([rkey, json.dumps(message)])
-            print("Message pending send: [%s] RKEY: [%s]" % (message, rkey))
+            pub.send_multipart([
+                str(message['profiler']['client_id']),
+                json.dumps(message)])
+            print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
     except:
         rcv.close()
-        # pub.close()
+        pub.close()
         context.term()

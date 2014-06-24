@@ -65,7 +65,7 @@ if __name__ == "__main__":
     queue_loan.connect("tcp://{host}:{port}".format(**config['incoming']['loanService']))
     queue_loan.setsockopt(zmq.SUBSCRIBE, config['incoming']['loanService']['routing_key'])
 
-    queue_risk.bind("tcp://*:{port}".format(**config['incoming']['risk']))
+    queue_risk.bind("tcp://{host}:{port}".format(**config['incoming']['risk']))
     # queue_risk.connect("tcp://{host}:{port}".format(**config['incoming']['risk']))
     # queue_risk.setsockopt(zmq.SUBSCRIBE, config['incoming']['risk']['routing_key'])
 

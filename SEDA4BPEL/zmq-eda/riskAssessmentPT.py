@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-
+# python riskAssessmentPT.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml
 
 import sys
 import json
