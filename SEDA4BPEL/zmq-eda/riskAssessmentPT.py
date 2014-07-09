@@ -72,7 +72,7 @@ if __name__ == "__main__":
     pub_approval.connect("tcp://{host}:{port}".format(**config['outgoing']['approval']))
 
     try:
-        with MessageProfiler(True) as mp:
+        with MessageProfiler(CONFIG_SECTION, True) as mp:
 
             while True:
                 rkey, message = queue.recv_multipart()
@@ -86,7 +86,7 @@ if __name__ == "__main__":
                 message['profiler']['riskAssessmentPT_ts'] = time.time()
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.received(size_str)
+                mp.msg_received(size_str)
 
                 rand = random.randint(0,4)
                 if not rand:  # 80% for low risk
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                 print("Sent message [%s] RKEY: [%s]" % (message, rkey))
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.sent(size_str)
+                mp.msg_sent(size_str)
 
     except:
         queue.close()

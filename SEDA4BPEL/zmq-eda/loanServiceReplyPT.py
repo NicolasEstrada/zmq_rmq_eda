@@ -64,7 +64,7 @@ if __name__ == "__main__":
     pub.bind("tcp://{host}:{port}".format(**config['outgoing']))
 
     try:
-        with MessageProfiler(True) as mp:
+        with MessageProfiler(CONFIG_SECTION, True) as mp:
 
             while True:
                 rkey, message = rcv.recv_multipart()
@@ -77,7 +77,7 @@ if __name__ == "__main__":
                 message = json.loads(message)
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.received(size_str)
+                mp.msg_received(size_str)
 
                 message['profiler']['loanServiceReplyPT_ts'] = time.time()
                 pub.send_multipart([
@@ -86,7 +86,7 @@ if __name__ == "__main__":
                 print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.sent(size_str)
+                mp.msg_sent(size_str)
 
     except:
         rcv.close()

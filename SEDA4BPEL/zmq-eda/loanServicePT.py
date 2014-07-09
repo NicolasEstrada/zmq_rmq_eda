@@ -69,7 +69,7 @@ if __name__ == "__main__":
     pub.bind("tcp://{host}:{port}".format(**config['outgoing']))
 
     try:
-        with MessageProfiler(True) as mp:
+        with MessageProfiler(CONFIG_SECTION, True) as mp:
 
             while True:
                 rkey, message = rcv.recv_multipart()
@@ -80,7 +80,7 @@ if __name__ == "__main__":
                     continue
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.received(size_str)
+                mp.msg_received(size_str)
                 
                 message = json.loads(message)
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
                 print("Sent message [%s] RKEY: [%s]" % (message, rkey))
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.sent(size_str)
+                mp.msg_sent(size_str)
 
     except:
         rcv.close()

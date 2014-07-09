@@ -86,7 +86,7 @@ if __name__ == "__main__":
     poller.register(queue_risk, zmq.POLLIN)
 
     try:
-        with MessageProfiler(True) as mp:
+        with MessageProfiler(CONFIG_SECTION, True) as mp:
 
             while True:
                 socks = dict(poller.poll())
@@ -112,13 +112,13 @@ if __name__ == "__main__":
                 time.sleep(args.app_time)
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.received(size_str)
+                mp.msg_received(size_str)
 
                 pub.send_multipart([rkey, json.dumps(message)])
                 print("Sent message [%s] RKEY: [%s]" % (message, rkey))
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.sent(size_str)
+                mp.msg_sent(size_str)
 
     except:
         queue_loan.close()

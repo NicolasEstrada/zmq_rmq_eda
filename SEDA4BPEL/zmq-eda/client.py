@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# python client.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml -fn nico -n estrada -a 2000 1000 15000 3000 6000 500 300 -wt 5 -ci 50001
+# python client.py -cf ./config/zmq-eda.yaml -pf ./config/loan_approval.yaml -fn nico -n estrada -a 2000 1000 15000 3000 6000 500 300 -ci 50001
 
 import sys
 import json
@@ -16,7 +16,7 @@ from message_profiler import MessageProfiler
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
 MIN_CLIENT_ID = 50000 # not included
-WAIT_TIME = 120
+WAIT_TIME = 2
 
 ALLOWED_SOCKET_TYPES = ('PUSH', 'PULL', 'XPUB' ,'SUB')
 ALLOWED_MESSAGE_TYPES = ('creditInformationMessage')
@@ -146,7 +146,8 @@ if __name__ == "__main__":
     client_receive.setsockopt(zmq.SUBSCRIBE, str(client_id))
 
     try:
-        with MessageProfiler(True) as mp:
+        log_fname = "{0}_{1}".format(CONFIG_SECTION, args.client_id)
+        with MessageProfiler(log_fname, True) as mp:
 
             while True:
                 message.update(values)
@@ -158,7 +159,7 @@ if __name__ == "__main__":
                 print("Sent message [%s] RKEY: [%s]" % (message, rkey))
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.sent(size_str)
+                mp.msg_sent(size_str)
 
                 values.update({'amount': random.choice(args.amount)})
 
@@ -171,7 +172,7 @@ if __name__ == "__main__":
                     message['profiler']['client_received_ts'] - message['profiler']['client_send_ts']))
 
                 size_str = sys.getsizeof(rkey + str(message))
-                mp.received(size_str)
+                mp.msg_received(size_str)
 
                 time.sleep(args.wait_time)
 
