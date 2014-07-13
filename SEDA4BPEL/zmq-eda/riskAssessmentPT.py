@@ -88,19 +88,19 @@ if __name__ == "__main__":
                 size_str = sys.getsizeof(rkey + str(message))
                 mp.msg_received(size_str)
 
-                rand = random.randint(0,4)
-                if not rand:  # 80% for low risk
-                    rkey = config['outgoing']['low_risk']['routing_key']
-                    pub_low.send_multipart([rkey, json.dumps(message)])
-                    message['level'] = 'low'
-                    message['accept'] = 'yes'
-                else:
-                    rkey = config['outgoing']['approval']['routing_key']
-                    pub_approval.send_multipart([rkey, json.dumps(message)])
-                    if rand in (1,2):
-                        message['level'] = 'medium'
-                    elif rand in (3,4):
-                        message['level'] = 'high'
+                # RiskAssessment <assign> activity (risk="low")
+                rkey = config['outgoing']['low_risk']['routing_key']
+                pub_low.send_multipart([rkey, json.dumps(message)])
+                message['level'] = 'low'
+                message['accept'] = 'yes'
+                
+                # Non-low risk assessment (not included in the scenario)
+                # rkey = config['outgoing']['approval']['routing_key']
+                # pub_approval.send_multipart([rkey, json.dumps(message)])
+                # if rand in (1,2):
+                #     message['level'] = 'medium'
+                # elif rand in (3,4):
+                #     message['level'] = 'high'
 
                 print("Sent message [%s] RKEY: [%s]" % (message, rkey))
 
