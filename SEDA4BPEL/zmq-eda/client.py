@@ -11,9 +11,12 @@ import zmq
 import yaml
 import argparse
 
+from message_profiler import MessageProfiler
+
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
 MIN_CLIENT_ID = 50000 # not included
+WAIT_TIME = 2
 
 ALLOWED_SOCKET_TYPES = ('PUSH', 'PULL', 'XPUB' ,'SUB')
 ALLOWED_MESSAGE_TYPES = ('creditInformationMessage')
@@ -86,6 +89,13 @@ if __name__ == "__main__":
         required=True,
         type=int,
         help='loan amount requested')
+    parser.add_argument(
+        '-wt',
+        '--wait_time',
+        required=False,
+        type=int,
+        default=WAIT_TIME,
+        help='wait time in seconds between request response received and next request')
 
     args = parser.parse_args()
 
@@ -136,28 +146,36 @@ if __name__ == "__main__":
     client_receive.setsockopt(zmq.SUBSCRIBE, str(client_id))
 
     try:
-        while True:
-            message.update(values)
-            rkey = config['outgoing']['routing_key']
+        log_fname = "{0}_{1}".format(CONFIG_SECTION, args.client_id)
+        with MessageProfiler(log_fname, True) as mp:
 
-            size_str = sys.getsizeof(rkey + str(message))
+            while True:
+                message.update(values)
+                rkey = config['outgoing']['routing_key']
 
-            message['profiler']['client_send_ts'] = time.time()
-            message['profiler']['client_id'] = client_id
-            client_request.send_multipart([rkey, json.dumps(message)])
-            print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+                message['profiler']['client_send_ts'] = time.time()
+                message['profiler']['client_id'] = client_id
+                client_request.send_multipart([rkey, json.dumps(message)])
+                print("Sent message [%s] RKEY: [%s]" % (message, rkey))
 
-            values.update({'amount': random.choice(args.amount)})
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.msg_sent(size_str)
 
-            # Waiting loanService response to proceed
-            rkey, message = client_receive.recv_multipart()
-            message = json.loads(message)
-            message['profiler']['client_received_ts'] = time.time()
-            print("Received message [%s] RKEY: [%s], Elapsed time: [%s] seconds" % (
-                message, rkey,
-                message['profiler']['client_received_ts'] - message['profiler']['client_send_ts']))
+                values.update({'amount': random.choice(args.amount)})
 
-            time.sleep(5)
+                # Waiting loanService response to proceed
+                rkey, message = client_receive.recv_multipart()
+                message = json.loads(message)
+                message['profiler']['client_received_ts'] = time.time()
+                print("Received message [%s] RKEY: [%s], Elapsed time: [%s] seconds" % (
+                    message, rkey,
+                    message['profiler']['client_received_ts'] - message['profiler']['client_send_ts']))
+
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.msg_received(size_str)
+
+                time.sleep(args.wait_time)
+
     except:
         raise
         client_request.close()

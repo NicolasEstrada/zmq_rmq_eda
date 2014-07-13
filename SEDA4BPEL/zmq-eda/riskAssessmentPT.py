@@ -11,6 +11,8 @@ import zmq
 import yaml
 import argparse
 
+from message_profiler import MessageProfiler
+
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
 
@@ -70,27 +72,40 @@ if __name__ == "__main__":
     pub_approval.connect("tcp://{host}:{port}".format(**config['outgoing']['approval']))
 
     try:
-        while True:
-            rkey, message = queue.recv_multipart()
-            print("Received message [%s] RKEY: [%s]" % (message, rkey))
+        with MessageProfiler(CONFIG_SECTION, True) as mp:
 
-            if rkey != 'riskAssessment':
-                print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
-                continue
+            while True:
+                rkey, message = queue.recv_multipart()
+                print("Received message [%s] RKEY: [%s]" % (message, rkey))
 
-            message = json.loads(message)
-            message['profiler']['riskAssessmentPT_ts'] = time.time()
-            size_str = sys.getsizeof(rkey + str(message))
+                if rkey != 'riskAssessment':
+                    print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
+                    continue
 
-            if random.randint(0,4):  # 80% for low risk
-            # if False:  gor testing
-                rkey = config['outgoing']['low_risk']['routing_key']
-                pub_low.send_multipart([rkey, json.dumps(message)])
-            else:
-                rkey = config['outgoing']['approval']['routing_key']
-                pub_approval.send_multipart([rkey, json.dumps(message)])
+                message = json.loads(message)
+                message['profiler']['riskAssessmentPT_ts'] = time.time()
 
-            print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.msg_received(size_str)
+
+                rand = random.randint(0,4)
+                if not rand:  # 80% for low risk
+                    rkey = config['outgoing']['low_risk']['routing_key']
+                    pub_low.send_multipart([rkey, json.dumps(message)])
+                    message['level'] = 'low'
+                    message['accept'] = 'yes'
+                else:
+                    rkey = config['outgoing']['approval']['routing_key']
+                    pub_approval.send_multipart([rkey, json.dumps(message)])
+                    if rand in (1,2):
+                        message['level'] = 'medium'
+                    elif rand in (3,4):
+                        message['level'] = 'high'
+
+                print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.msg_sent(size_str)
 
     except:
         queue.close()

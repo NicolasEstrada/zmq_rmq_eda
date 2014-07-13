@@ -10,6 +10,8 @@ import zmq
 import yaml
 import argparse
 
+from message_profiler import MessageProfiler
+
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
 
@@ -67,26 +69,33 @@ if __name__ == "__main__":
     pub.bind("tcp://{host}:{port}".format(**config['outgoing']))
 
     try:
-        while True:
-            rkey, message = rcv.recv_multipart()
-            print("Received message [%s] RKEY: [%s]" % (message, rkey))
+        with MessageProfiler(CONFIG_SECTION, True) as mp:
 
-            if rkey != 'loanService':
-                print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
-                continue
-            
-            message = json.loads(message)
+            while True:
+                rkey, message = rcv.recv_multipart()
+                print("Received message [%s] RKEY: [%s]" % (message, rkey))
 
-            if message['amount'] < args.threshold:
-                rkey = config['outgoing']['routing_key']['low_amount']
-            else:
-                rkey = config['outgoing']['routing_key']['high_amount']
+                if rkey != 'loanService':
+                    print("[WARNING] Wrong rkey for message [%s] RKEY: [%s]" % (message, rkey))
+                    continue
 
-            size_str = sys.getsizeof(rkey + str(message))
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.msg_received(size_str)
+                
+                message = json.loads(message)
 
-            message['profiler']['loanServicePT_ts'] = time.time()
-            pub.send_multipart([rkey, json.dumps(message)])
-            print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+                if message['amount'] < args.threshold:
+                    rkey = config['outgoing']['routing_key']['low_amount']
+                else:
+                    rkey = config['outgoing']['routing_key']['high_amount']
+
+                message['profiler']['loanServicePT_ts'] = time.time()
+                pub.send_multipart([rkey, json.dumps(message)])
+                print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+
+                size_str = sys.getsizeof(rkey + str(message))
+                mp.msg_sent(size_str)
+
     except:
         rcv.close()
         pub.close()

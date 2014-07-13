@@ -11,6 +11,9 @@ creditInformationMessage:
   firstName: "FIRSTNAME"
   name: "NAME"
   amount: 0
+  level: "LEVEL_STRING"
+  accept: "ACCEPT_MESSAGE"
+  errorCode: 0
   profiler: profiler
 
 approvalMessage:
