@@ -41,7 +41,8 @@ class MessageProfiler(object):
             "mb_ratio_out": self.mb_ratio_out
         }
 
-        with open("{0}.log".format(self.name), "a") as f:
+        # TODO: Handle log folder creation
+        with open("log/{0}.log".format(self.name), "a") as f:
             f.write(json.dumps(self.stats) + '\n')
 
         if self.verbose:
