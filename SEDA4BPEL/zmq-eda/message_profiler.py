@@ -42,8 +42,8 @@ class MessageProfiler(object):
         }
 
         # TODO: Handle log folder creation
-        with open("log/{0}.log".format(self.name), "a") as f:
-            f.write(json.dumps(self.stats) + '\n')
+        # with open("log/{0}.log".format(self.name), "a") as f:
+        #     f.write(json.dumps(self.stats) + '\n')
 
         if self.verbose:
             msg = LOG_STR.format(**self.stats)
@@ -56,3 +56,40 @@ class MessageProfiler(object):
     def msg_sent(self, bytes):
         self.count_out += 1
         self.bytes_out += bytes
+
+
+class ClientMessageProfiler(MessageProfiler):
+    def __init__(self, name="default", verbose=False):
+        self.response_time = {
+            "low": {
+                "requests_received": 0,
+                "response_time": 0
+            },
+
+            "default": {
+                "requests_received": 0,
+                "response_time": 0
+            },
+
+            "high": {
+                "requests_received": 0,
+                "response_time": 0
+            }
+        }
+        super(ClientMessageProfiler, self).__init__(name, verbose)
+
+    def update_response_time(self, key, elapsed_time):
+        try:
+            self.response_time[key]["requests_received"] += 1
+            self.response_time[key]["response_time"] += elapsed_time
+        except KeyError:
+            self.response_time[key] = {
+                "requests_received": 0,
+                "response_time": 0
+            }
+
+            self.response_time[key]["requests_received"] += 1
+            self.response_time[key]["response_time"] += elapsed_time
+
+    def get_response_time(self):
+        return self.response_time

@@ -8,14 +8,17 @@ import time
 import random
 
 import zmq
-import yaml
+# import yaml
 # import argparse
 
-from message_profiler import MessageProfiler
+from timeout import Timeout
+from message_profiler import ClientMessageProfiler
 
 from celery import Celery
 
-app_clients = Celery('clients', backend='amqp', broker='amqp://guest@localhost//')
+# app_clients = Celery('clients', backend='amqp', broker='amqp://guest@localhost//')
+app_clients = Celery()
+app_clients.config_from_object('config.celery-clients')
 
 MIN_PORT = 1024  # not included
 MAX_PORT = 65536  # not included
@@ -27,6 +30,11 @@ ALLOWED_MESSAGE_TYPES = ('creditInformationMessage')
 
 CONFIG_SECTION = 'client'
 
+
+def shuffle_list(shuffle_list):
+    aux_list = list(shuffle_list)
+    random.shuffle(shuffle_list)
+    return aux_list
 
 @app_clients.task
 def run(config, message_patterns, port,
@@ -59,8 +67,8 @@ def run(config, message_patterns, port,
 
     values = {
         "firstName": first_name,
-        "name": name,
-        "amount": random.choice(amount)}
+        "name": name
+        }
 
     context = zmq.Context()
     client_request = context.socket(getattr(
@@ -78,50 +86,62 @@ def run(config, message_patterns, port,
 
     try:
         log_fname = "{0}_{1}".format(CONFIG_SECTION, client_id)
-        with MessageProfiler(log_fname, True) as mp:
+        with ClientMessageProfiler(log_fname, True) as mp:
 
-            # import pdb; pdb.set_trace()
-            while ( (-limit_amount <= -mp.count_in)
-                    and (mp.start - time.time() <= -limit_time)):
-                message.update(values)
-                rkey = config['outgoing']['routing_key']
+            try:
+                with Timeout(limit_time):
+                    while ((limit_amount == 0 or mp.count_in <= limit_amount)
+                            and (limit_time == 0 or time.time() - mp.start <= limit_time)):
 
-                message['profiler']['client_send_ts'] = time.time()
-                message['profiler']['client_id'] = client_id
-                client_request.send_multipart([rkey, json.dumps(message)])
-                print("Sent message [%s] RKEY: [%s]" % (message, rkey))
+                        seq = mp.count_out % len(amount)
+                        if not seq:
+                            random.shuffle(amount)
+                        values.update({'amount': amount[seq]})
 
-                size_str = sys.getsizeof(rkey + str(message))
-                mp.msg_sent(size_str)
+                        message.update(values)
+                        rkey = str(config['outgoing']['routing_key'])
 
-                values.update({'amount': random.choice(amount)})
+                        message['profiler']['client_send_ts'] = time.time()
+                        message['profiler']['client_id'] = client_id
+                        client_request.send_multipart([rkey, json.dumps(message)])
+                        # print("Sent message [%s] RKEY: [%s]" % (message, rkey))
 
-                # Waiting loanService response to proceed
-                rkey, message = client_receive.recv_multipart()
-                message = json.loads(message)
-                message['profiler']['client_received_ts'] = time.time()
-                print("Received message [%s] RKEY: [%s], Elapsed time: [%s] seconds" % (
-                    message, rkey,
-                    message['profiler']['client_received_ts'] - message['profiler']['client_send_ts']))
+                        size_str = sys.getsizeof(rkey + str(message))
+                        mp.msg_sent(size_str)
 
-                size_str = sys.getsizeof(rkey + str(message))
-                mp.msg_received(size_str)
+                        # Waiting loanService response to proceed
+                        rkey, message = client_receive.recv_multipart()
+                        message = json.loads(message)
+                        message['profiler']['client_received_ts'] = time.time()
+                        print("Received message [%s] RKEY: [%s], Elapsed time: [%s] seconds" % (
+                            message, rkey,
+                            message['profiler']['client_received_ts'] - message['profiler']['client_send_ts']))
 
-                time.sleep(wait_time)
+                        size_str = sys.getsizeof(rkey + str(message))
+                        mp.msg_received(size_str)
 
-        # import pdb; pdb.set_trace()
-        return mp.stats
+                        mp.update_response_time(message['level'], message['profiler']['client_received_ts'] - message['profiler']['client_send_ts'])
+
+                        time.sleep(wait_time)
+            except Timeout.Timeout:
+                print "Timed out, client id: ", client_id
+                return mp.get_response_time()
+
+        print "Response done, client id: ", client_id
+        return mp.get_response_time()
 
     except:
-        raise
+        # raise
         client_request.close()
         client_receive.close()
         context.term()
+        return mp.get_response_time()
 
 
-@app_clients.task
-def result(list_of_dicts):
-    # Sum by field and get results
-    # print list_of_dicts
-    # import pdb; pdb.set_trace()
-    return list_of_dicts
+
+# @app_clients.task
+# def result(list_of_dicts):
+#     # Sum by field and get results
+#     # print list_of_dicts
+#     # import pdb; pdb.set_trace()
+#     return list_of_dicts

@@ -90,9 +90,9 @@ if __name__ == "__main__":
 
                 # RiskAssessment <assign> activity (risk="low")
                 rkey = config['outgoing']['low_risk']['routing_key']
-                pub_low.send_multipart([rkey, json.dumps(message)])
                 message['level'] = 'low'
                 message['accept'] = 'yes'
+                pub_low.send_multipart([rkey, json.dumps(message)])
                 
                 # Non-low risk assessment (not included in the scenario)
                 # rkey = config['outgoing']['approval']['routing_key']
