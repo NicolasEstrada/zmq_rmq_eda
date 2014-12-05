@@ -85,11 +85,12 @@ if __name__ == "__main__":
                 message = json.loads(message)
 
                 if message['amount'] < args.threshold:
-                    rkey = config['outgoing']['routing_key']['low_amount']
+                    rkey = str(config['outgoing']['routing_key']['low_amount'])
                 else:
-                    rkey = "{0}_{1}".format(
-                        message['profiler']['client_id'],
-                        config['outgoing']['routing_key']['high_amount'])
+                    # rkey = str("{0}_{1}".format(
+                    #     message['profiler']['client_id'],
+                    #     config['outgoing']['routing_key']['high_amount']))
+                    rkey = str(config['outgoing']['routing_key']['high_amount'])
 
                 message['profiler']['loanServicePT_ts'] = time.time()
                 pub.send_multipart([rkey, json.dumps(message)])

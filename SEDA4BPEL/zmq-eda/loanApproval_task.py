@@ -1,4 +1,5 @@
 
+import time
 import random
 import string
 import argparse
@@ -101,15 +102,17 @@ if __name__ == '__main__':
     lower_limit = MIN_CLIENT_ID + 1
     upper_limit = MIN_CLIENT_ID + 1 + args.instances_quantity
 
+    start_time = time.time()
+
     loanApproval_job = group(
                 run.s(
                     config, message_patterns, args.port,
                     args.message_type, client_id,
                     app_time=args.app_time, limit_amount=args.limit_amount,
-                    limit_time=args.limit_time
+                    limit_time=args.limit_time, start_time=start_time
                     ) for client_id in xrange(lower_limit, upper_limit)
                 )
 
     result = loanApproval_job.apply_async(queue='loanApprovalPT_tasks')
 
-    print result.get()
+    print result.get(propagate=False)

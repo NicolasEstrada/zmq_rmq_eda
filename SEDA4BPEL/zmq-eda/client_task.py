@@ -1,4 +1,5 @@
 
+import time
 import random
 import string
 import argparse
@@ -124,33 +125,47 @@ if __name__ == '__main__':
     #                 ) for client_id in xrange(lower_limit, upper_limit)
     #             )(result.s()).get()
 
+    start_time = time.time()
     clients_job = group(
                 run.s(
                     config, message_patterns, args.port,
                     args.message_type, random_string(random.randint(3,10)),
                     random_string(random.randint(4,10)), client_id, args.amount,
-                    args.wait_time, args.limit_amount, args.limit_time
+                    args.wait_time, args.limit_amount, args.limit_time, start_time
                     ) for client_id in xrange(lower_limit, upper_limit)
                 )
 
     result = clients_job.apply_async(queue='clients_tasks')
 
-    results = result.get()
+    print "Executing tasks ..."    
+    while True:
+        if not result.ready():
+            print "Completed clients: ", result.completed_count()
+            time.sleep(10)
+        else:
+            print "Completed clients: ", result.completed_count()
+            break
+
+
+    results = result.get(propagate=False)
+
 
     requests_received = 0
     response_time = 0
 
-    print results
+    # print results
 
     # import pdb; pdb.set_trace()
     for i, res in enumerate(results):
-        print i
-        requests_received += res['low']['requests_received']
-        response_time += res['low']['response_time']
+        # print i
+        if 'low' in res:
+            requests_received += res['low']['requests_received']
+            response_time += res['low']['response_time']
 
     print "rqs received: ", requests_received, "; response_time: ", response_time
 
-    message = "For {0} clients, the average response was: {1}".format(
-        args.client_quantity,
-        float(response_time / requests_received))
-    print message
+    if requests_received > 0:
+        message = "For {0} clients, the average response was: {1}".format(
+            args.client_quantity,
+            float(response_time / requests_received))
+        print message
