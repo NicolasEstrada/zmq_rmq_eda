@@ -1,0 +1,86 @@
+client:
+  incoming:
+    host: localhost
+    port: 50000
+    socket_type: SUB
+    message_type: approvalMessage
+  outgoing:
+    host: localhost
+    port: 10000
+    socket_type: PUSH
+    message_type: creditInformationMessage
+    routing_key: loanService
+
+loanServicePT:
+  incoming:
+    host: '*'
+    port: 10000
+    socket_type: PULL
+    message_type: creditInformationMessage
+  outgoing:
+    host: '*'
+    port: 20000
+    socket_type: XPUB
+    message_type: creditInformationMessage
+    routing_key:
+      low_amount: riskAssessment
+      high_amount: loanApproval
+
+riskAssessmentPT:
+  incoming:
+    host: localhost
+    port: 20000
+    socket_type: SUB
+    message_type: creditInformationMessage
+    routing_key: riskAssessment
+  outgoing:
+    low_risk:
+      host: localhost
+      port: 30000
+      socket_type: PUSH
+      # involved_message_type: riskAssesmentMessage
+      message_type: approvalMessage
+      routing_key: loanServiceReply
+    approval:
+      host: localhost
+      # port: 20001  # Fix problem with used port
+      port: 40000
+      socket_type: PUSH
+      message_type: creditInformationMessage
+      routing_key: loanApproval
+
+loanApprovalPT:
+  incoming:
+    loanService:
+      host: localhost
+      port: 20000
+      # port: 20000  # Receive form multiple ports to fix problem
+      socket_type: SUB
+      message_type: creditInformationMessage
+      routing_key: loanApproval
+    risk:
+      host: '*'
+      # port: 20001  # Fix problem with used port
+      port: 40000
+      socket_type: PULL
+      message_type: creditInformationMessage
+      routing_key: loanApproval
+  outgoing:
+    host: localhost
+    port: 30000
+    socket_type: PUSH
+    message_type: approvalMessage
+    routing_key: loanServiceReply
+
+loanServiceReplyPT:
+  incoming:
+    host: '*'
+    port: 30000
+    socket_type: PULL
+    message_type: approvalMessage
+    routing_key: clientResponse
+  outgoing:
+    host: '*'
+    port: 50000
+    socket_type: XPUB
+    message_type: approvalMessage

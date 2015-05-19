@@ -1,0 +1,29 @@
+profiler:
+  client_id: 0
+  client_send_ts: 0  # request sent
+  loanServicePT_ts: 0
+  loanServiceReplyPT_ts: 0
+  loanApprovalPT_ts: 0
+  riskAssessmentPT_ts: 0
+  client_received_ts: 0  # response received
+
+creditInformationMessage:
+  firstName: "FIRSTNAME"
+  name: "NAME"
+  amount: 0
+  level: "default"
+  accept: "ACCEPT_MESSAGE"
+  errorCode: 0
+  profiler: profiler
+
+approvalMessage:
+  accept: "ACCEPT_MESSAGE"
+  profiler: profiler
+
+riskAssessmentMessage:
+  level: "low"
+  profiler: profiler
+
+errorMessage:
+  errorCode: 0
+  profiler: profiler
