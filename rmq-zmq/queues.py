@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Broker documentation.
+"""Queues documentation.
 
-This scripts implements a broker using ZeroMQ to receive and route messages.
+This scripts implements a queue using ZeroMQ to receive and deliver messages.
 
 Example:
-    Broker usage example as follows:
-    usage: python broker.py
+    Queues usage example as follows:
+    usage: python queues.py
 
 """
 
@@ -22,17 +22,19 @@ from message_profiler import MessageProfiler
 # Getting context and defining bindings
 context = zmq.Context()
 
-rcv = context.socket(zmq.PULL)
-pub = context.socket(zmq.XPUB)
+queue = context.socket(zmq.SUB)
+pub = context.socket(zmq.PUSH)
 
-rcv.bind("tcp://*:10001")
-pub.bind("tcp://*:11001")
+queue.connect("tcp://localhost:11001")
+queue.setsockopt(zmq.SUBSCRIBE, 'routing_key.example')
+
+pub.bind("tcp://*:12001")
 
 try:
     with MessageProfiler(True) as mp:
         # Broker (receive and deliver)
         while True:
-            rkey, message = rcv.recv_multipart()
+            rkey, message = queue.recv_multipart()
             bytes = sys.getsizeof(rkey + message)
             mp.msg_received(bytes)
 
@@ -42,6 +44,6 @@ try:
             pub.send_multipart([rkey, message])
             mp.msg_sent(bytes)
 except:
-    rcv.close()
+    queue.close()
     pub.close()
     context.term()

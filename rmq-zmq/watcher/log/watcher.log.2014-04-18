@@ -1,0 +1,19 @@
+2014-04-18 18:52:45,332 watcher      INFO     Initializing logging handler with INFO level
+2014-04-18 18:52:45,332 watcher      INFO     Starting to watch processes
+2014-04-18 18:52:45,378 watcher      INFO     Waiting 5 seconds for processes status consistency
+2014-04-18 18:52:50,380 watcher      CRITICAL All jobs already finished. Terminating
+2014-04-18 18:52:50,380 watcher      INFO     Watcher finished his work... good bye!
+2014-04-18 18:53:20,514 watcher      INFO     Initializing logging handler with INFO level
+2014-04-18 18:53:20,514 watcher      INFO     Starting to watch processes
+2014-04-18 18:53:20,539 watcher      INFO     Waiting 5 seconds for processes status consistency
+2014-04-18 18:53:25,540 watcher      INFO     Polling
+2014-04-18 18:53:25,540 watcher      INFO     Summary for archivers [1]: R: 5 | S: 0 | F: 0 | D: 0
+2014-04-18 18:53:37,147 watcher      INFO     Keyboard Interrupt... finishing
+2014-04-18 18:53:37,168 watcher      INFO     Watcher finished his work... good bye!
+2014-04-18 18:54:08,492 watcher      INFO     Initializing logging handler with INFO level
+2014-04-18 18:54:08,493 watcher      INFO     Starting to watch processes
+2014-04-18 18:54:08,529 watcher      INFO     Waiting 5 seconds for processes status consistency
+2014-04-18 18:54:13,530 watcher      INFO     Polling
+2014-04-18 18:54:13,531 watcher      INFO     Summary for archivers [1]: R: 5 | S: 0 | F: 0 | D: 0
+2014-04-18 18:54:24,282 watcher      INFO     Keyboard Interrupt... finishing
+2014-04-18 18:54:24,283 watcher      INFO     Watcher finished his work... good bye!
