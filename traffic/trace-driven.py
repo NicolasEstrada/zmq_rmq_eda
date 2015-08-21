@@ -1,3 +1,20 @@
+#!/usr/bin/env python
+
+
+# Sensor - Client
+
+#      <csv file>
+#    --------------
+# --| trace-driven |--
+#    --------------
+#         XPUB
+
+
+#      SUB
+#    --------
+# --| sensor |--
+#    --------
+#      PUB
 
 import sys
 import csv
@@ -65,3 +82,6 @@ if __name__ == '__main__':
                         get_speed(avg_speed))
 
                 offset += n + 1
+
+
+#WINDOW SIZE < AVERAGE MEDITIONS
