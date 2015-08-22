@@ -61,7 +61,6 @@ def run():
         conf.receiver['outgoing']['socket_type']))
     pub.bind("tcp://{host}:{port}".format(**conf.receiver['outgoing']))
 
-
     try:
         while True:
 
@@ -78,3 +77,8 @@ def run():
         rcv.close()
         pub.close()
         context.term()
+
+
+if __name__ == '__main__':
+    run()
+

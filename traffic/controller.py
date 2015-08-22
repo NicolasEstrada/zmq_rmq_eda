@@ -7,7 +7,7 @@ Receives events from event handlers and process them
 to find patterns, generates new aggregated events and
 create sliding windows for further analysis.
 
-Also takes caro of CEP (Complex Event Proecessing).
+Also takes care of CEP (Complex Event Processing).
 
 Example:
     Execution mode:
@@ -48,37 +48,6 @@ def run():
 
     context = zmq.Context()
 
-    rcv = context.socket(getattr(
-        zmq,
-        conf.receiver['incoming']['socket_type']))
-    rcv.bind("tcp://{host}:{port}".format(**conf.receiver['incoming']))
-
-    pub = context.socket(getattr(
-        zmq,
-        conf.receiver['outgoing']['socket_type']))
-    pub.bind("tcp://{host}:{port}".format(**conf.receiver['outgoing']))
-
-
-    try:
-        while True:
-
-            rkey, message = rcv.recv_multipart()
-            print("[receiver] Received message [%s] RKEY: [%s]" % (message, rkey))
-            message = json.loads(message)
-
-            message['profiler']['receiver_ts'] = time.time()
-
-            pub.send_multipart([rkey, json.dumps(message)])
-            print("[reeciver] Sent message [%s] RKEY: [%s]" % (message, rkey))
-
-    except:
-        rcv.close()
-        pub.close()
-        context.term()
-
-
-    context = zmq.Context()
-
     queue = context.socket(getattr(
         zmq,
         conf.controller['incoming']['socket_type'])
@@ -110,3 +79,6 @@ def run():
         pub.close()
         context.term()
 
+
+if __name__ == '__main__':
+    run()

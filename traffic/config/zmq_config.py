@@ -1,4 +1,12 @@
 
+generator = dict(
+	outgoing = dict(
+		host = '*',
+		port = 10000,
+		socket_type = 'XPUB'
+		)
+	)
+
 sensor = dict(
 	incoming = dict(
 		host = 'localhost',
@@ -9,7 +17,7 @@ sensor = dict(
 	outgoing = dict(
 		host = 'localhost',
 		port = 11000,
-		socket_type = 'PUB'
+		socket_type = 'PUSH'
 		)
 	)
 
@@ -32,7 +40,7 @@ controller = dict(
 		host = 'localhost',
 		port = 12000,
 		socket_type = 'SUB',
-		routing_key = 'CEP'
+		routing_key = ''
 		),
 
 	outgoing = dict(

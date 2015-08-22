@@ -29,7 +29,7 @@ Schema:
     --------
  --| sensor |--
     --------
-      PUB
+      PUSH
 
        PULL
     ----------
@@ -41,6 +41,7 @@ Schema:
 
 import time
 import json
+import argparse
 
 import zmq
 
@@ -99,3 +100,20 @@ def run(sensor_id=0):
         sensor_receive.close()
         sensor_publish.close()
         context.term()
+
+
+if __name__ == '__main__':
+
+    # Arguments for sensor id
+    parser = argparse.ArgumentParser(
+        description="""Script that receives data from event generator.""",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument(
+        '-sid',
+        '--sensor_id',
+        default=0,
+        help='ID of sensor to be binded')
+
+    args = parser.parse_args()
+    run(args.sensor_id)
