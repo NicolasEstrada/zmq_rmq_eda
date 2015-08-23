@@ -28,6 +28,7 @@ Schema:
 
 """
 
+import sys
 import time
 import json
 
@@ -54,16 +55,23 @@ def run():
         while True:
 
             rkey, message = rcv.recv_multipart()
-            print("[data] Received message [%s] RKEY: [%s]" % (message, rkey))
+            # print("[data] Received message [%s] RKEY: [%s]" % (message, rkey))
             message = json.loads(message)
 
             message['profiler']['data_ts'] = time.time()
 
             # db store
 
+    except KeyboardInterrupt:
+        rcv.close()
+        context.term()
+        sys.exit(0)
+
     except:
         rcv.close()
         context.term()
+        raise
+        # sys.exit(1)
 
 
 if __name__ == '__main__':

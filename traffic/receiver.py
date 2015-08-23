@@ -34,6 +34,7 @@ Schema:
 
 """
 
+import sys
 import time
 import json
 
@@ -65,18 +66,26 @@ def run():
         while True:
 
             rkey, message = rcv.recv_multipart()
-            print("[receiver] Received message [%s] RKEY: [%s]" % (message, rkey))
+            # print("[receiver] Received message [%s] RKEY: [%s]" % (message, rkey))
             message = json.loads(message)
 
             message['profiler']['receiver_ts'] = time.time()
 
             pub.send_multipart([rkey, json.dumps(message)])
-            print("[receiver] Sent message [%s] RKEY: [%s]" % (message, rkey))
+            # print("[receiver] Sent message [%s] RKEY: [%s]" % (message, rkey))
+
+    except KeyboardInterrupt:
+        rcv.close()
+        pub.close()
+        context.term()
+        sys.exit(0)
 
     except:
         rcv.close()
         pub.close()
         context.term()
+        raise
+        # sys.exit(1)
 
 
 if __name__ == '__main__':

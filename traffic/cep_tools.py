@@ -50,17 +50,38 @@ __version__ = "1.0.0"
 __email__ = "nicoestrada.i@gmail.com"
 __status__ = "Development"
 
- 
-WINDOW_SIZE = 1000
+
+WINDOW_SIZE = 100
 MIN_THRESHOLD = 30
 MAX_THESHOLD = 150
+
+
+def last_moving_average(values, window_size=WINDOW_SIZE):
+    """Calculates moving average of a list of values
+
+    Arguments:
+        values,         list of values to calculate the mvg avg
+        window_size,    windows size for mvg avg calculation
+
+    Return:
+        moving_average, last moving average value
+    """
+
+    if len(values) < window_size:
+        # in case the list of values is shorter that window size
+        return numpy.average(values)
+
+    # calculating moving average an returning last value
+    weights = numpy.repeat(1.0, window_size) / window_size
+    return numpy.convolve(values, weights, 'valid')[-1]
+
 
 class Notification(object):
     """Class for notification levels"""
 
     IGNORE = dict(
         notify_str = 'OK',
-        log = '[OK] Normal values, moving avg., |speed = {speed} km/h (moving avg = {avg_speed} km/h)|',
+        log = '[OK] Normal values, moving avg., |speed = {speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 0,
         event = dict(
             routing_key = 'ignore.avg',
@@ -70,7 +91,7 @@ class Notification(object):
         )
     WARNING = dict(
         notify_str = 'WARNING',
-        log = '[WARNING] values over 10 percent, |{speed} km/h (moving avg = {avg_speed} km/h)|',
+        log = '[WARNING] values over 10 percent, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 1,
         event = dict(
             routing_key = 'warning.avg',
@@ -80,7 +101,7 @@ class Notification(object):
         )
     CRITICAL = dict(
         notify_str = 'CRITICAL',
-        log = '[CRITICAL] values over 20 percent, |{speed} km/h (moving avg = {avg_speed} km/h)|',
+        log = '[CRITICAL] values over 20 percent, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 2,
         event = dict(
             routing_key = 'critical.avg',
@@ -90,7 +111,7 @@ class Notification(object):
         )
     EXCEPTION = dict(
         notify_str = 'EXCEPTION_AVG',
-        log = '[EXCEPTION] values over 50 percent, |{speed} km/h (moving avg = {avg_speed} km/h)|',
+        log = '[EXCEPTION] values over 50 percent, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 3,
         event = dict(
             routing_key = 'exception.avg',
@@ -100,7 +121,7 @@ class Notification(object):
         )
     EXCEPTION_MIN = dict(
         notify_str = 'EXCEPTION_MIN',
-        log = '[EXCEPTION] speed under minimum threshold, |{speed} km/h (moving avg = {avg_speed} km/h)|',
+        log = '[EXCEPTION] speed under minimum threshold, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 4,
         event = dict(
             routing_key = 'exception.min',
@@ -110,7 +131,7 @@ class Notification(object):
         )
     EXCEPTION_MAX = dict(
         notify_str = 'EXCEPTION_MAX',
-        log = '[EXCEPTION] speed over maximum threshold, |{speed} km/h (moving avg = {avg_speed} km/h)|',
+        log = '[EXCEPTION] speed over maximum threshold, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 5,
         event = dict(
             routing_key = 'exception.max',
@@ -121,7 +142,7 @@ class Notification(object):
 
     RECOVERY = dict(
         notify_str = 'RECOVERY',
-        log = '[RECOVERY] mv avg speed recovered, |{speed} km/h (moving avg = {avg_speed} km/h)|',
+        log = '[RECOVERY] mv avg speed recovered, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 6,
         event = dict(
             routing_key = 'recovery.avg',
@@ -143,6 +164,8 @@ class Notification(object):
         self._last_notification = None
         self._last_speed = None
         self._last_notification_id = 0
+        self._offset = 0
+        self._mv_avg = 0
 
     def get_level(self, value, mode=DEFAULT_MODE):
 
@@ -179,38 +202,31 @@ class Notification(object):
             else:
                 return Notification.IGNORE
 
+    def check(self, speed, values):
 
-def last_moving_average(values, window_size=WINDOW_SIZE):
-    """Calculates moving average of a list of values
+        if not self._offset % WINDOW_SIZE:
+            # use simple average when amount of values is less that winow size
+            self._mv_avg = last_moving_average(values)
+            self._avg = numpy.average(values)
 
-    Arguments:
-        values,         list of values to calculate the mvg avg
-        window_size,    windows size for mvg avg calculation
+        percent_variation = 100 * (self._mv_avg - speed) / self._mv_avg
 
-    Return:
-        moving_average, last moving average value
-    """
+        cep_event = self.get_level(numpy.absolute(percent_variation))
 
-    if len(values) < window_size:
-        # in case the list of values is shorter that window size
-        return numpy.average(values)
+        # setting snapshot variables
+        self._last_notification_id = cep_event['notify_id']
+        self._offset += 1
+        self._last_speed = speed
 
-    # calculating moving average an returning last value
-    weights = numpy.repeat(1.0, window_size) / window_size
-    return numpy.convolve(values, weights, 'valid')[-1]
-
-
-def check(instance, speed, values):
-
-    mv_avg = last_moving_average(values)
-
-    percent_variation = 100 * numpy.absolute(mv_avg - speed) / mv_avg
-
-    cep_event = instance.get_level(percent_variation)
-
-    print '-----------------------------------------------------------------\n'
-    print '| Notification Id: ', cep_event['notify_id'], ' [', cep_event['notify_str'], '], percent variation: ', percent_variation
-    print cep_event['log'].format(speed=speed, avg_speed=mv_avg)
-    print 'CEP event agg: ', cep_event['event']
-    print '-----------------------------------------------------------------\n'
+        if cep_event['notify_id']:
+            print '-----------------------------------------------------------------\n'
+            print '| Notification Id: {0} [{1}], variation: {2:.2f}%, avg {3:.2f} km/h\n'.format(
+                cep_event['notify_id'],
+                cep_event['notify_str'],
+                percent_variation,
+                self._avg
+                )
+            print cep_event['log'].format(speed=speed, avg_speed=self._mv_avg)
+            print 'CEP event agg: ', cep_event['event']
+            print '-----------------------------------------------------------------\n'
 

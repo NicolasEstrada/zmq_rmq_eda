@@ -57,60 +57,65 @@ def run():
         conf.generator['outgoing']['socket_type'])
     )
     pub.bind("tcp://{host}:{port}".format(**conf.generator['outgoing']))
+    try:
+        with open(data_file_path, 'rb') as data:
 
-    with open(data_file_path, 'rb') as data:
+            data_reader = csv.reader(data)
+            offset = 0
 
-        data_reader = csv.reader(data)
-        offset = 0
+            for i, row in enumerate(data_reader):
+                if i > 0:
+                    date = "{0}-{1:02d}-{2:02d} {3:02d}:{4:02d}:00".format(
+                        row[2],
+                        int(row[3]),
+                        int(row[4]),
+                        int(row[5]),
+                        int(row[6]))
 
-        for i, row in enumerate(data_reader):
-            if i > 0:
-                date = "{0}-{1:02d}-{2:02d} {3:02d}:{4:02d}:00".format(
-                    row[2],
-                    int(row[3]),
-                    int(row[4]),
-                    int(row[5]),
-                    int(row[6]))
+                    timestamp = arrow.get(date)
+                    scans = int(row[7].replace(",", ""))
+                    avg_speed = float(row[8].replace(",", "."))
 
-                timestamp = arrow.get(date)
-                scans = int(row[7].replace(",", ""))
-                avg_speed = float(row[8].replace(",", "."))
+                    log = "Datetime: {0}, Scans: {1}, Speed: {2}".format(
+                        timestamp,
+                        scans,
+                        avg_speed)
 
-                log = "Datetime: {0}, Scans: {1}, Speed: {2}".format(
-                    timestamp,
-                    scans,
-                    avg_speed)
+                    for n in xrange(1):
+                    # for n in xrange(scans):
+                        # TODO: event generator with ts within range
 
-                for n in xrange(scans):
-                    # TODO: event generator with ts within range
+                        sensor_id = row[0]
+                        event_id = offset + n + 1
+                        speed = get_speed(avg_speed)
 
-                    sensor_id = row[0]
-                    event_id = offset + n + 1
-                    speed = get_speed(avg_speed)
+                        # print "[S{0}][{1}] Speed: {2} \n".format(
+                        #     sensor_id,
+                        #     event_id,
+                        #     speed)
 
-                    print "[S{0}][{1}] Speed: {2} \n".format(
-                        sensor_id,
-                        event_id,
-                        speed)
+                        message = dict(
+                            sensor_id = str(sensor_id),
+                            event_id = event_id,
+                            speed = speed,
+                            profiler = dict(
+                                created_ts = time.time())
+                            )
+                        rkey = str(sensor_id)
 
-                    message = dict(
-                        sensor_id = str(sensor_id),
-                        event_id = event_id,
-                        speed = speed,
-                        profiler = dict(
-                            created_ts = time.time())
-                        )
-                    rkey = str(sensor_id)
+                        pub.send_multipart([
+                            rkey,
+                            json.dumps(message)])
 
-                    pub.send_multipart([
-                        rkey,
-                        json.dumps(message)])
+                        # print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
 
-                    print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
+                        time.sleep(0.003)
 
-                    time.sleep(.5)
+                    offset += n + 1
 
-                offset += n + 1
+    except:
+        pub.close()
+        context.term()
 
 
 if __name__ == '__main__':
@@ -135,4 +140,7 @@ if __name__ == '__main__':
     else:
         sys.exit(1)
 
-    run()
+    try:
+        run()
+    except KeyboardInterrupt:
+        sys.exit(0)

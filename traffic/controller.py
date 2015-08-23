@@ -38,6 +38,7 @@ Schema:
 
 """
 
+import sys
 import time
 import json
 
@@ -79,22 +80,31 @@ def run():
         while True:
 
             rkey, message = queue.recv_multipart()
-            print("[controller] Received message [%s] RKEY: [%s]" % (message, rkey))
+            # print("[controller] Received message [%s] RKEY: [%s]" % (message, rkey))
 
             message = json.loads(message)
             message['profiler']['controller_ts'] = time.time()
 
             pub.send_multipart([rkey, json.dumps(message)])
-            print("[controller - db] Sent message [%s] RKEY: [%s]" % (message, rkey))
+            # print("[controller - db] Sent message [%s] RKEY: [%s]" % (message, rkey))
 
             cep.send_multipart([rkey, json.dumps(message)])
-            print("[controller - cep] Sent message [%s] RKEY: [%s]" % (message, rkey))
+            # print("[controller - cep] Sent message [%s] RKEY: [%s]" % (message, rkey))
 
+    except KeyboardInterrupt:
+        queue.close()
+        pub.close()
+        cep.close()
+        context.term()
+        sys.exit(0)
+        
     except:
         queue.close()
         pub.close()
         cep.close()
         context.term()
+        raise
+        # sys.exit(1)
 
 
 if __name__ == '__main__':

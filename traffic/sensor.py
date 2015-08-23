@@ -39,6 +39,7 @@ Schema:
 
 """
 
+import sys
 import time
 import json
 import argparse
@@ -81,25 +82,33 @@ def run(sensor_id=0):
 
             rkey, message = sensor_receive.recv_multipart()
             message = json.loads(message)
-            print(
-                "[SID %s] Received event [%s] RKEY: [%s]"
-                    % (str(sensor_id), message, rkey)
-            )
+            # print(
+            #     "[SID %s] Received event [%s] RKEY: [%s]"
+            #         % (str(sensor_id), message, rkey)
+            # )
 
             message['profiler']['sensor_received_ts'] = time.time()
 
             message['profiler']['sensor_received_id'] = sensor_id
             sensor_publish.send_multipart([rkey, json.dumps(message)])
-            print(
-                "[SID %s] Sent event [%s] RKEY: [%s]"
-                    % (str(sensor_id), message, rkey)
-            )
+            # print(
+            #     "[SID %s] Sent event [%s] RKEY: [%s]"
+            #         % (str(sensor_id), message, rkey)
+            # )
+
+    except KeyboardInterrupt:
+        sensor_receive.close()
+        sensor_publish.close()
+        context.term()
+        sys.exit(0)
 
     except:
         # Closing zmq connections and context
         sensor_receive.close()
         sensor_publish.close()
         context.term()
+        raise
+        # sys.exit(1)
 
 
 if __name__ == '__main__':
