@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Complex event processing for traffic control.
+"""Data handler for traffic control.
 
-Receives events from controller to process them and create aggregated data.
+Receives events from controller for further storage/visualization.
 
 Example:
     Execution mode:
 
-        $ python cep.py
+        $ python data.py
 
 Schema:
 
@@ -47,29 +47,19 @@ def run():
 
     rcv = context.socket(getattr(
         zmq,
-        conf.cep['incoming']['socket_type']))
-    rcv.bind("tcp://{host}:{port}".format(**conf.cep['incoming']))
-
-    pub = context.socket(getattr(
-        zmq,
-        conf.cep['outgoing']['socket_type'])
-    )
-    pub.connect("tcp://{host}:{port}".format(**conf.cep['outgoing']))
+        conf.data['incoming']['socket_type']))
+    rcv.bind("tcp://{host}:{port}".format(**conf.data['incoming']))
 
     try:
         while True:
 
             rkey, message = rcv.recv_multipart()
-            print("[cep] Received message [%s] RKEY: [%s]" % (message, rkey))
+            print("[data] Received message [%s] RKEY: [%s]" % (message, rkey))
             message = json.loads(message)
 
             message['profiler']['data_ts'] = time.time()
 
-            # cep processing: moving avg; min/max threshold speed
-
-            pub.send_multipart([rkey, json.dumps(message)])
-            print("[cep] Sent message [%s] RKEY: [%s]" % (message, rkey))
-
+            # db store
 
     except:
         rcv.close()

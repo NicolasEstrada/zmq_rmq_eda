@@ -29,6 +29,13 @@ Schema:
     ------------
         PUSH
 
+
+        PULL
+    ------------
+ --|    data    |--
+    ------------
+     <Database>
+
 """
 
 import time
@@ -61,6 +68,12 @@ def run():
     )
     pub.connect("tcp://{host}:{port}".format(**conf.controller['outgoing']))
 
+    cep = context.socket(getattr(
+        zmq,
+        conf.controller['cep']['socket_type'])
+    )
+    cep.connect("tcp://{host}:{port}".format(**conf.controller['cep']))
+
     try:
 
         while True:
@@ -72,11 +85,15 @@ def run():
             message['profiler']['riskAssessmentPT_ts'] = time.time()
 
             pub.send_multipart([rkey, json.dumps(message)])
-            print("[controller] Sent message [%s] RKEY: [%s]" % (message, rkey))
+            print("[controller - db] Sent message [%s] RKEY: [%s]" % (message, rkey))
+
+            cep.send_multipart([rkey, json.dumps(message)])
+            print("[controller - cep] Sent message [%s] RKEY: [%s]" % (message, rkey))
 
     except:
         queue.close()
         pub.close()
+        cep.close()
         context.term()
 
 

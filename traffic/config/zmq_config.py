@@ -47,5 +47,33 @@ controller = dict(
 		host = 'localhost',
 		port = 13000,
 		socket_type = 'PUSH'
+		),
+
+	cep = dict(
+		host = 'localhost',
+		port = 14000,
+		socket_type = 'PUSH'
+		)
+	)
+
+data = dict(
+	incoming = dict(
+		host = '*',
+		port = 13000,
+		socket_type = 'PULL'
+		)
+	)
+
+cep = dict(
+	incoming = dict(
+		host = '*',
+		port = 14000,
+		socket_type = 'PULL'
+		),
+
+	outgoing = dict(
+		host = 'localhost',
+		port = 13000,
+		socket_type = 'PUSH'
 		)
 	)
