@@ -108,6 +108,8 @@ def run():
 
                     print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
 
+                    time.sleep(.5)
+
                 offset += n + 1
 
 

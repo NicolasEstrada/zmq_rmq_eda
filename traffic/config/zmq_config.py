@@ -75,7 +75,7 @@ cep = dict(
 		host = 'localhost',
 		port = 13000,
 		socket_type = 'PUSH'
-		)
+		),
 
 	db = dict(
 		host = 'localhost',

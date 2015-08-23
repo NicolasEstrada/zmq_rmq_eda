@@ -33,12 +33,16 @@ import json
 
 import zmq
 
+import cep_tools
 from config import zmq_config as conf
 
 __author__ = "Nicolas Estrada"
 __version__ = "1.0.0"
 __email__ = "nicoestrada.i@gmail.com"
 __status__ = "Development"
+
+speeds = []
+instance = cep_tools.Notification()
 
 
 def run():
@@ -50,11 +54,11 @@ def run():
         conf.cep['incoming']['socket_type']))
     rcv.bind("tcp://{host}:{port}".format(**conf.cep['incoming']))
 
-    pub = context.socket(getattr(
-        zmq,
-        conf.cep['outgoing']['socket_type'])
-    )
-    pub.connect("tcp://{host}:{port}".format(**conf.cep['outgoing']))
+    # pub = context.socket(getattr(
+    #     zmq,
+    #     conf.cep['outgoing']['socket_type'])
+    # )
+    # pub.connect("tcp://{host}:{port}".format(**conf.cep['outgoing']))
 
     try:
         while True:
@@ -67,13 +71,18 @@ def run():
 
             # cep processing: moving avg; min/max threshold speed
 
-            pub.send_multipart([rkey, json.dumps(message)])
+            speeds.append(message['speed'])  # replace using Redis
+            cep_tools.check(instance, message['speed'], speeds)
+
+            # pub.send_multipart([rkey, json.dumps(message)])
             print("[cep] Sent message [%s] RKEY: [%s]" % (message, rkey))
 
 
     except:
         rcv.close()
+        # pub.close()
         context.term()
+        raise
 
 
 if __name__ == '__main__':

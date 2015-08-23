@@ -43,7 +43,7 @@ import time
 import json
 import numpy
 
-import redis
+# import redis
 
 __author__ = "Nicolas Estrada"
 __version__ = "1.0.0"
@@ -59,7 +59,7 @@ class Notification(object):
     """Class for notification levels"""
 
     IGNORE = dict(
-        notify_str = 'OK'
+        notify_str = 'OK',
         log = '[OK] Normal values, moving avg., |speed = {speed} km/h (moving avg = {avg_speed} km/h)|',
         notify_id = 0,
         event = dict(
@@ -69,7 +69,7 @@ class Notification(object):
         threshold = 10
         )
     WARNING = dict(
-        notify_str = 'WARNING'
+        notify_str = 'WARNING',
         log = '[WARNING] values over 10 percent, |{speed} km/h (moving avg = {avg_speed} km/h)|',
         notify_id = 1,
         event = dict(
@@ -79,7 +79,7 @@ class Notification(object):
         threshold = 20
         )
     CRITICAL = dict(
-        notify_str = 'CRITICAL'
+        notify_str = 'CRITICAL',
         log = '[CRITICAL] values over 20 percent, |{speed} km/h (moving avg = {avg_speed} km/h)|',
         notify_id = 2,
         event = dict(
@@ -89,7 +89,7 @@ class Notification(object):
         threshold = 50
         )
     EXCEPTION = dict(
-        notify_str = 'EXCEPTION_AVG'
+        notify_str = 'EXCEPTION_AVG',
         log = '[EXCEPTION] values over 50 percent, |{speed} km/h (moving avg = {avg_speed} km/h)|',
         notify_id = 3,
         event = dict(
@@ -99,7 +99,7 @@ class Notification(object):
         threshold = 100
         )
     EXCEPTION_MIN = dict(
-        notify_str = 'EXCEPTION_MIN'
+        notify_str = 'EXCEPTION_MIN',
         log = '[EXCEPTION] speed under minimum threshold, |{speed} km/h (moving avg = {avg_speed} km/h)|',
         notify_id = 4,
         event = dict(
@@ -109,7 +109,7 @@ class Notification(object):
         threshold = MIN_THRESHOLD
         )
     EXCEPTION_MAX = dict(
-        notify_str = 'EXCEPTION_MAX'
+        notify_str = 'EXCEPTION_MAX',
         log = '[EXCEPTION] speed over maximum threshold, |{speed} km/h (moving avg = {avg_speed} km/h)|',
         notify_id = 5,
         event = dict(
@@ -120,7 +120,7 @@ class Notification(object):
         )
 
     RECOVERY = dict(
-        notify_str = 'RECOVERY'
+        notify_str = 'RECOVERY',
         log = '[RECOVERY] mv avg speed recovered, |{speed} km/h (moving avg = {avg_speed} km/h)|',
         notify_id = 6,
         event = dict(
@@ -146,7 +146,7 @@ class Notification(object):
 
     def get_level(self, value, mode=DEFAULT_MODE):
 
-        if MODE[mode] == self.MODE[1]:
+        if self.MODE[mode] == self.MODE[1]:
             # percent variation accoridng moving average
 
             if value < self.IGNORE['threshold']:
@@ -167,7 +167,7 @@ class Notification(object):
             else:
                 return Notification.EXCEPTION
 
-        elif MODE[mode] == self.MODE[2]:
+        elif self.MODE[mode] == self.MODE[2]:
             # speed threshold detection
 
             if value < MIN_THRESHOLD:
@@ -191,7 +191,7 @@ def last_moving_average(values, window_size=WINDOW_SIZE):
         moving_average, last moving average value
     """
 
-    if window_size < len(values):
+    if len(values) < window_size:
         # in case the list of values is shorter that window size
         return numpy.average(values)
 
@@ -200,27 +200,16 @@ def last_moving_average(values, window_size=WINDOW_SIZE):
     return numpy.convolve(values, weights, 'valid')[-1]
 
 
-dict(
-        notify_str = 'OK'
-        log = '[OK] Normal values, moving avg. speed = {speed} km/h',
-        notify_id = 0,
-        event = dict(
-            routing_key = 'ignore.avg',
-            actions = []
-            ),
-        threshold = 10
-        )
-
-def check(speed, values):
+def check(instance, speed, values):
 
     mv_avg = last_moving_average(values)
 
     percent_variation = 100 * numpy.absolute(mv_avg - speed) / mv_avg
 
-    cep_event = Notification.get_level(percent_variation)
+    cep_event = instance.get_level(percent_variation)
 
     print '-----------------------------------------------------------------\n'
-    print '| Notification Id: ', cep_event['notify_id'], ' [', cep_event['notify_str'], ']'
+    print '| Notification Id: ', cep_event['notify_id'], ' [', cep_event['notify_str'], '], percent variation: ', percent_variation
     print cep_event['log'].format(speed=speed, avg_speed=mv_avg)
     print 'CEP event agg: ', cep_event['event']
     print '-----------------------------------------------------------------\n'
