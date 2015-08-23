@@ -31,6 +31,7 @@ Schema:
 import sys
 import time
 import json
+from collections import deque
 
 import zmq
 
@@ -42,7 +43,8 @@ __version__ = "1.0.0"
 __email__ = "nicoestrada.i@gmail.com"
 __status__ = "Development"
 
-speeds = []
+MAX_LENGTH = 10000
+speeds = deque([], MAX_LENGTH)
 notification = cep_tools.Notification()
 
 
