@@ -88,7 +88,7 @@ def run(sensor_id=0):
 
             message['profiler']['sensor_received_ts'] = time.time()
 
-            message['profiler']['client_id'] = sensor_id
+            message['profiler']['sensor_received_id'] = sensor_id
             sensor_publish.send_multipart([rkey, json.dumps(message)])
             print(
                 "[SID %s] Sent event [%s] RKEY: [%s]"

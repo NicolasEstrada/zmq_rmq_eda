@@ -71,7 +71,7 @@ def run():
             message['profiler']['receiver_ts'] = time.time()
 
             pub.send_multipart([rkey, json.dumps(message)])
-            print("[reeciver] Sent message [%s] RKEY: [%s]" % (message, rkey))
+            print("[receiver] Sent message [%s] RKEY: [%s]" % (message, rkey))
 
     except:
         rcv.close()

@@ -82,7 +82,7 @@ def run():
             print("[controller] Received message [%s] RKEY: [%s]" % (message, rkey))
 
             message = json.loads(message)
-            message['profiler']['riskAssessmentPT_ts'] = time.time()
+            message['profiler']['controller_ts'] = time.time()
 
             pub.send_multipart([rkey, json.dumps(message)])
             print("[controller - db] Sent message [%s] RKEY: [%s]" % (message, rkey))
