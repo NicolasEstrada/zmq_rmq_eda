@@ -33,6 +33,7 @@ import sys
 import csv
 import time
 import json
+import numpy
 import random
 import argparse
 
@@ -40,6 +41,9 @@ import zmq
 import arrow
 
 from config import zmq_config as conf
+
+SD = 10
+INTERVAL = 900.0
 
 
 def get_speed(avg_speed):
@@ -74,6 +78,7 @@ def run():
 
                     timestamp = arrow.get(date)
                     scans = int(row[7].replace(",", ""))
+                    devices = int(row[11].replace(",", ""))
                     avg_speed = float(row[8].replace(",", "."))
 
                     log = "Datetime: {0}, Scans: {1}, Speed: {2}".format(
@@ -81,13 +86,17 @@ def run():
                         scans,
                         avg_speed)
 
-                    for n in xrange(1):
-                    # for n in xrange(scans):
-                        # TODO: event generator with ts within range
+                    occurrences = (1 if devices == 0
+                        else int(numpy.ceil(scans / float(devices)))
+                    )
+
+                    for n in xrange(occurrences):
+                        # one file per sensor
 
                         sensor_id = row[0]
                         event_id = offset + n + 1
-                        speed = get_speed(avg_speed)
+                        # speed = get_speed(avg_speed)
+                        speed = numpy.random.normal(avg_speed, SD)
 
                         # print "[S{0}][{1}] Speed: {2} \n".format(
                         #     sensor_id,
@@ -98,6 +107,11 @@ def run():
                             sensor_id = str(sensor_id),
                             event_id = event_id,
                             speed = speed,
+                            event_ts = (
+                                (timestamp + arrow.util.timedelta(
+                                seconds=INTERVAL
+                                / float(occurrences))).timestamp),
+
                             profiler = dict(
                                 created_ts = time.time())
                             )
@@ -109,13 +123,14 @@ def run():
 
                         # print("Message sent: [%s] RKEY: [%s]" % (message, rkey))
 
-                        time.sleep(0.003)
+                        # time.sleep(.005)
 
                     offset += n + 1
 
     except:
         pub.close()
         context.term()
+        raise
 
 
 if __name__ == '__main__':

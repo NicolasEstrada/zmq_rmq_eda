@@ -40,7 +40,7 @@ controller = dict(
 		host = 'localhost',
 		port = 12000,
 		socket_type = 'SUB',
-		routing_key = ''
+		routing_key = 'event'
 		),
 
 	outgoing = dict(
@@ -61,6 +61,10 @@ data = dict(
 		host = '*',
 		port = 13000,
 		socket_type = 'PULL'
+		),
+
+	disk = dict(
+		path = './data.csv'
 		)
 	)
 
@@ -75,6 +79,11 @@ cep = dict(
 		host = 'localhost',
 		port = 13000,
 		socket_type = 'PUSH'
+		),
+
+	events = dict (
+		send_event = (1, 2, 3, 4, 5, 6),
+		cep_agg = (3,)
 		),
 
 	db = dict(

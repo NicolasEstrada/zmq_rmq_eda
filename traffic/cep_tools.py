@@ -52,7 +52,8 @@ __status__ = "Development"
 
 
 WINDOW_SIZE = 100
-MIN_THRESHOLD = 30
+WINDOW_SIZE_COMP = 10
+MIN_THRESHOLD = 5
 MAX_THESHOLD = 150
 
 
@@ -74,6 +75,28 @@ def last_moving_average(values, window_size=WINDOW_SIZE):
     # calculating moving average an returning last value
     weights = numpy.repeat(1.0, window_size) / window_size
     return numpy.convolve(values, weights, 'valid')[-1]
+
+
+def moving_average(values, window_size=WINDOW_SIZE_COMP):
+    """Calculates moving average of a list of values
+
+    Arguments:
+        values,         list of values to calculate the mvg avg
+        window_size,    windows size for mvg avg calculation
+
+    Return:
+        moving_average, moving average list
+    """
+
+    if len(values) < window_size:
+        # in case the list of values is shorter that window size
+        # return numpy.average(values)
+        window_size = 1
+
+
+    # calculating moving average an returning last value
+    weights = numpy.repeat(1.0, window_size) / window_size
+    return numpy.convolve(values, weights, 'valid')
 
 
 class Notification(object):
@@ -218,7 +241,7 @@ class Notification(object):
         self._offset += 1
         self._last_speed = speed
 
-        if cep_event['notify_id']:
+        if cep_event['notify_id'] in (3,4,5):
             print '-----------------------------------------------------------------\n'
             print '| Notification Id: {0} [{1}], variation: {2:.2f}%, avg {3:.2f} km/h\n'.format(
                 cep_event['notify_id'],
@@ -229,4 +252,6 @@ class Notification(object):
             print cep_event['log'].format(speed=speed, avg_speed=self._mv_avg)
             print 'CEP event agg: ', cep_event['event']
             print '-----------------------------------------------------------------\n'
+
+        return cep_event
 

@@ -52,15 +52,23 @@ def run():
     rcv.bind("tcp://{host}:{port}".format(**conf.data['incoming']))
 
     try:
-        while True:
+        with open(conf.data['disk']['path'], 'w') as data:
+            # output header
+            data.write('sensor_id, speed, timestamp, type\n')
 
-            rkey, message = rcv.recv_multipart()
-            # print("[data] Received message [%s] RKEY: [%s]" % (message, rkey))
-            message = json.loads(message)
+            while True:
 
-            message['profiler']['data_ts'] = time.time()
+                rkey, message = rcv.recv_multipart()
+                # print("[data] Received message [%s] RKEY: [%s]" % (message, rkey))
+                message = json.loads(message)
 
-            # db store
+                message['profiler']['data_ts'] = time.time()
+
+                data.write('{0},{1:.2f},{2},{3}'.format(
+                    message['sensor_id'],
+                    message['speed'],
+                    message['event_ts'],
+                    rkey) + '\n')
 
     except KeyboardInterrupt:
         rcv.close()
