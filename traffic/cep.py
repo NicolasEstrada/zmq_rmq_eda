@@ -46,9 +46,9 @@ __email__ = "nicoestrada.i@gmail.com"
 __status__ = "Development"
 
 X_POINTS = 100
-MAX_LENGTH = 100000
-# speeds = deque([], MAX_LENGTH)
-speeds = []
+MAX_LENGTH = 500000
+speeds = deque([], MAX_LENGTH)
+# speeds = []
 notification = cep_tools.Notification()
 
 
@@ -120,7 +120,7 @@ def run():
             lower = int(i * offset)
             upper = int((i * offset) + offset + 1)
             speeds_compressed.append(
-                numpy.average(speeds[lower:upper])
+                numpy.average(list(speeds)[lower:upper])
                 )
 
         # x = [i + 1 for i in xrange(len(speeds))]

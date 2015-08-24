@@ -42,6 +42,7 @@ Schema:
 import time
 import json
 import numpy
+from collections import deque
 
 # import redis
 
@@ -51,7 +52,8 @@ __email__ = "nicoestrada.i@gmail.com"
 __status__ = "Development"
 
 
-WINDOW_SIZE = 100
+WINDOW_SIZE = 500
+WARMUP = WINDOW_SIZE * .85
 WINDOW_SIZE_COMP = 10
 MIN_THRESHOLD = 5
 MAX_THESHOLD = 150
@@ -187,43 +189,45 @@ class Notification(object):
         self._last_notification = None
         self._last_speed = None
         self._last_notification_id = 0
+        self._lasts_notifications_ids = deque([], WINDOW_SIZE)
         self._offset = 0
         self._mv_avg = 0
 
-    def get_level(self, value, mode=DEFAULT_MODE):
+    def get_level(self, speed, variation):
 
-        if self.MODE[mode] == self.MODE[1]:
-            # percent variation accoridng moving average
+        # if self.MODE[mode] == self.MODE[1]:
+        #     # percent variation accoridng moving average
 
-            if value < self.IGNORE['threshold']:
-                if (self._last_notification_id
-                    and self._last_notification_id
-                        != self.RECOVERY['notify_id']):
+        if speed < MIN_THRESHOLD:
+            return Notification.EXCEPTION_MIN
 
-                    return Notification.RECOVERY
-                else:
-                    return Notification.IGNORE
+        elif speed > MAX_THESHOLD:
+            return Notification.EXCEPTION_MAX
 
-            elif value < self.WARNING['threshold']:
-                return Notification.WARNING
+        elif variation < self.IGNORE['threshold']:
+            if (not self._last_notification_id
+                and self.RECOVERY['notify_id'] not in self._lasts_notifications_ids
+                and self._lasts_notifications_ids.count(
+                        self.IGNORE['notify_id']) >= WARMUP):
 
-            elif value < self.CRITICAL['threshold']:
-                return Notification.CRITICAL
-
-            else:
-                return Notification.EXCEPTION
-
-        elif self.MODE[mode] == self.MODE[2]:
-            # speed threshold detection
-
-            if value < MIN_THRESHOLD:
-                return Notification.EXCEPTION_MIN
-
-            elif value > MAX_THESHOLD:
-                return Notification.EXCEPTION_MAX
-
+                return Notification.RECOVERY
             else:
                 return Notification.IGNORE
+
+        elif variation < self.WARNING['threshold']:
+            return Notification.WARNING
+
+        elif variation < self.CRITICAL['threshold']:
+            return Notification.CRITICAL
+
+        elif variation < self.EXCEPTION['threshold']:
+            return Notification.EXCEPTION
+
+        # elif self.MODE[mode] == self.MODE[2]:
+        #     # speed threshold detection
+
+        else:
+            return Notification.IGNORE
 
     def check(self, speed, values):
 
@@ -234,24 +238,26 @@ class Notification(object):
 
         percent_variation = 100 * (self._mv_avg - speed) / self._mv_avg
 
-        cep_event = self.get_level(numpy.absolute(percent_variation))
+        cep_event = self.get_level(speed, numpy.absolute(percent_variation))
 
         # setting snapshot variables
         self._last_notification_id = cep_event['notify_id']
+        self._lasts_notifications_ids.append(cep_event['notify_id'])
         self._offset += 1
         self._last_speed = speed
 
-        if cep_event['notify_id'] in (3,4,5):
-            print '-----------------------------------------------------------------\n'
-            print '| Notification Id: {0} [{1}], variation: {2:.2f}%, avg {3:.2f} km/h\n'.format(
-                cep_event['notify_id'],
-                cep_event['notify_str'],
-                percent_variation,
-                self._avg
-                )
-            print cep_event['log'].format(speed=speed, avg_speed=self._mv_avg)
-            print 'CEP event agg: ', cep_event['event']
-            print '-----------------------------------------------------------------\n'
+        # if cep_event['notify_id'] in (6,):
+        # # if cep_event['notify_id'] in (3,4,5,6):
+        #     print '-----------------------------------------------------------------\n'
+        #     print '| Notification Id: {0} [{1}], variation: {2:.2f}%, avg {3:.2f} km/h\n'.format(
+        #         cep_event['notify_id'],
+        #         cep_event['notify_str'],
+        #         percent_variation,
+        #         self._avg
+        #         )
+        #     print cep_event['log'].format(speed=speed, avg_speed=self._mv_avg)
+        #     print 'CEP event agg: ', cep_event['event']
+        #     print '-----------------------------------------------------------------\n'
 
         return cep_event
 

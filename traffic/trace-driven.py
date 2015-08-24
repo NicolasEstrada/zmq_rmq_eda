@@ -42,7 +42,7 @@ import arrow
 
 from config import zmq_config as conf
 
-SD = 10
+SD = 7
 INTERVAL = 900.0
 
 
