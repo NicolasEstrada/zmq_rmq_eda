@@ -109,7 +109,7 @@ def run():
                             speed = speed,
                             event_ts = (
                                 (timestamp + arrow.util.timedelta(
-                                seconds=INTERVAL
+                                seconds=n * INTERVAL
                                 / float(occurrences))).timestamp),
 
                             profiler = dict(
