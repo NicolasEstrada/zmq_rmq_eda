@@ -12,15 +12,15 @@ Example:
 
 Schema:
 
-
-        SUB                    PULL
-    ------------              -------
- --| controller | PUSH --> --|  cep  |
-    ------------              -------
-        PUSH                    PUSH
-         ||                      ||
-         ||                      ||
-        PULL <-------------------||
+                                   -------
+        SUB                       ------- | XPUB -->  |     ------------
+    ------------                 ------- | XPUB ---> SUB - | aggregator | 
+ --| controller | PUSH --> PULL |  cep  | XPUB ---->  |     ------------
+    ------------                 -------                        PUSH
+        PUSH                      PUSH                           ||
+         ||                        ||                            ||
+         ||                        ||                            ||
+        PULL <---------------------||<---------------------------||
     ------------
  --|    data    |--
     ------------
@@ -58,7 +58,8 @@ def run():
 
     rcv = context.socket(getattr(
         zmq,
-        conf.cep['incoming']['socket_type']))
+        conf.cep['incoming']['socket_type'])
+    )
     rcv.bind("tcp://{host}:{port}".format(**conf.cep['incoming']))
 
     pub = context.socket(getattr(
@@ -67,9 +68,22 @@ def run():
     )
     pub.connect("tcp://{host}:{port}".format(**conf.cep['outgoing']))
 
+    xpub = context.socket(getattr(
+        zmq,
+        conf.cep['cep_agg_out']['socket_type'])
+    )
+    xpub.connect("tcp:/{host}:{port}".format(**conf.cep['cep_agg_out']))
+
+    # sub = context.socket(getattr(
+    #     zmq,
+    #     conf.cep['cep_agg_in']['socket_type'])
+    # )
+    # sub.connect("tcp://{host}:{port}".format(**conf.cep['cep_agg_in']))
+    # queue.setsockopt(zmq.SUBSCRIBE, conf.cep['cep_agg_in']['routing_key'])
+
     functions = {
         'send_event': lambda rk, msg: pub.send_multipart([rk, json.dumps(msg)]),
-        'cep_agg': lambda rk, msg: (rk, msg)
+        'cep_agg': lambda rk, msg: xpub.send_multipart([rk, json.dumps(msg)])
     }
 
     try:

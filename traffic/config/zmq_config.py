@@ -81,8 +81,14 @@ cep = dict(
 		socket_type = 'PUSH'
 		),
 
+	cep_agg_out = dict(
+		host = '*',
+		port = '15000',
+		socket_type = 'XPUB'
+		),
+
 	events = dict (
-		send_event = (1, 2, 3, 4, 5, 6),
+		send_event = (1, 2, 3, 4, 5, 6, 7),
 		cep_agg = (3,)
 		),
 
@@ -91,4 +97,19 @@ cep = dict(
 		port = 6379,
 		db_index = 0
 		)
+	)
+
+aggregator = dict(
+	cep_agg_in = dict(
+		host = 'localhost',
+		port = 15000,
+		socket_type = 'SUB',
+		routing_key = 'agg'
+		),
+
+	outgoing = dict(
+		host = 'localhost',
+		port = 13000,
+		socket_type = 'PUSH'
+		),
 	)

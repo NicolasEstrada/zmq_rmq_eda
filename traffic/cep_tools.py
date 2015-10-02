@@ -130,7 +130,7 @@ class Notification(object):
         notify_id = 2,
         event = dict(
             routing_key = 'critical.avg',
-            actions = ['send_event', 'cep_agg']
+            actions = ['send_event']
             ),
         threshold = 50
         )
@@ -176,9 +176,21 @@ class Notification(object):
         threshold = 10
         )
 
+    EXCEPTION_AGG = dict(
+        notify_str = 'EXCEPTION_AGG',
+        log = '[EXCEPTION_AGG] speeds levels out of boundaries for multipele correlated sensors, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
+        notify_id = 7,
+        event = dict(
+            routing_key = 'exception.agg',
+            actions = ['send_event']
+            ),
+        threshold = 10
+        )
+
     MODE = {
-        1: 'percent_variation',
-        2: 'speed_threshold'
+        1: 'percent_variation',  # avg
+        2: 'speed_threshold',  # min, max
+        3: 'correlated_events'  # agg
     }
 
     DEFAULT_MODE = 1
@@ -223,11 +235,13 @@ class Notification(object):
         elif variation < self.EXCEPTION['threshold']:
             return Notification.EXCEPTION
 
-        # elif self.MODE[mode] == self.MODE[2]:
-        #     # speed threshold detection
 
         else:
             return Notification.IGNORE
+
+    def correlated_events(self, event):
+        #if self.MODE[mode] == self.MODE[3]:
+        #     # speed threshold detection
 
     def check(self, speed, values):
 
