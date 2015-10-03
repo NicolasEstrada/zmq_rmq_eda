@@ -28,9 +28,10 @@ Schema:
 
 """
 
+import os
 import sys
 import time
-import json
+import ujson as json
 import numpy
 from collections import deque
 
@@ -72,7 +73,7 @@ def run():
         zmq,
         conf.cep['cep_agg_out']['socket_type'])
     )
-    xpub.connect("tcp:/{host}:{port}".format(**conf.cep['cep_agg_out']))
+    xpub.bind("tcp://{host}:{port}".format(**conf.cep['cep_agg_out']))
 
     # sub = context.socket(getattr(
     #     zmq,
@@ -83,14 +84,14 @@ def run():
 
     functions = {
         'send_event': lambda rk, msg: pub.send_multipart([rk, json.dumps(msg)]),
-        'cep_agg': lambda rk, msg: xpub.send_multipart([rk, json.dumps(msg)])
+        'cep_agg': lambda rk, msg: xpub.send_multipart(['agg', json.dumps(msg)])
     }
 
     try:
         while True:
 
             rkey, message = rcv.recv_multipart()
-            # print("[cep] Received message [%s] RKEY: [%s]" % (message, rkey))
+            print("[cep] Received message [%s] RKEY: [%s]" % (message, rkey))
             message = json.loads(message)
 
             message['profiler']['data_ts'] = time.time()
@@ -114,42 +115,44 @@ def run():
     except KeyboardInterrupt:
         rcv.close()
         pub.close()
+        xpub.close()
         context.term()
-        sys.exit(0)
+        # sys.exit(0)
         
     except:
         rcv.close()
         pub.close()
+        xpub.close()
         context.term()
         raise
         # sys.exit(1)
-    finally:
-        # plotting results
-        speeds_compressed = []
+    # finally:
+    # plotting results
+    speeds_compressed = []
 
-        offset = int(numpy.floor(len(speeds) / X_POINTS))
+    offset = int(numpy.floor(len(speeds) / X_POINTS))
 
-        for i in xrange(X_POINTS):
-            # compressing data points
-            lower = int(i * offset)
-            upper = int((i * offset) + offset + 1)
-            speeds_compressed.append(
-                numpy.average(list(speeds)[lower:upper])
-                )
+    for i in xrange(X_POINTS):
+        # compressing data points
+        lower = int(i * offset)
+        upper = int((i * offset) + offset + 1)
+        speeds_compressed.append(
+            numpy.average(list(speeds)[lower:upper])
+            )
 
-        # x = [i + 1 for i in xrange(len(speeds))]
-        # mvg_avg = cep_tools.moving_average(speeds)
+    # x = [i + 1 for i in xrange(len(speeds))]
+    # mvg_avg = cep_tools.moving_average(speeds)
 
-        # pyplot.plot(x[len(x) - len(mvg_avg):], mvg_avg)
-        # pyplot.plot(x, speeds)
-        # pyplot.show()
+    # pyplot.plot(x[len(x) - len(mvg_avg):], mvg_avg)
+    # pyplot.plot(x, speeds)
+    # pyplot.show()
 
-        x = [i + 1 for i in xrange(len(speeds_compressed))]
-        mvg_avg = cep_tools.moving_average(speeds_compressed)
+    x = [i + 1 for i in xrange(len(speeds_compressed))]
+    mvg_avg = cep_tools.moving_average(speeds_compressed)
 
-        pyplot.plot(x[len(x) - len(mvg_avg):], mvg_avg)
-        pyplot.plot(x, speeds_compressed)
-        pyplot.show()
+    pyplot.plot(x[len(x) - len(mvg_avg):], mvg_avg)
+    pyplot.plot(x, speeds_compressed)
+    pyplot.savefig('./cep_{}.png'.format(os.getpid()))
 
 
 if __name__ == '__main__':

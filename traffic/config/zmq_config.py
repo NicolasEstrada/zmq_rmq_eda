@@ -100,7 +100,7 @@ cep = dict(
 	)
 
 aggregator = dict(
-	cep_agg_in = dict(
+	incoming = dict(
 		host = 'localhost',
 		port = 15000,
 		socket_type = 'SUB',

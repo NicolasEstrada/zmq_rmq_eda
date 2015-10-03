@@ -3,3 +3,4 @@ numpy==1.9.2
 python-dateutil==2.4.2
 pyzmq==14.7.0
 six==1.9.0
+ujson==1.33

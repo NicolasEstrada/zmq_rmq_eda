@@ -32,7 +32,7 @@ Schema:
 import sys
 import csv
 import time
-import json
+import ujson as json
 import numpy
 import random
 import argparse

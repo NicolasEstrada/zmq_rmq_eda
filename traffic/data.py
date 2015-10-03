@@ -30,7 +30,7 @@ Schema:
 
 import sys
 import time
-import json
+import ujson as json
 
 import zmq
 

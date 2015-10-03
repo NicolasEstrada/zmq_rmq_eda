@@ -33,16 +33,19 @@ Schema:
 
 import sys
 import time
-import json
+import ujson as json
 
 import zmq
 
+from cep_tools import Aggregator
 from config import zmq_config as conf
 
 __author__ = "Nicolas Estrada"
 __version__ = "1.0.0"
 __email__ = "nicoestrada.i@gmail.com"
 __status__ = "Development"
+
+WINDOW_SIZE = 900
 
 
 def run():
@@ -64,17 +67,22 @@ def run():
 
     try:
 
-        while True:
+        with Aggregator(rcv, pub, True) as agg:
+            while True:
 
-            rkey, message = queue.recv_multipart()
-            # print("[aggregator] Received message [%s] RKEY: [%s]" % (message, rkey))
+                rkey, message = agg.receive()
+                print("[aggregator] Received message [%s] RKEY: [%s]" % (message, rkey))
 
-            message = json.loads(message)
-            message['profiler']['aggregator_ts'] = time.time()
+                message['profiler']['aggregator_ts'] = time.time()
 
-            if CONDITION AGG:
-                pub.send_multipart([rkey, json.dumps(message)])
-                # print("[aggregator - db] Sent message [%s] RKEY: [%s]" % (message, rkey))
+                sid = message['sensor_id']
+                ts_key = message['event_ts'] - message['event_ts'] % WINDOW_SIZE
+
+                agg.register_event(sid, ts_key)
+
+                if agg.check():
+                    agg.publish([rkey, json.dumps(message)])
+                    print("[aggregator - db] Sent message [%s] RKEY: [%s]" % (message, rkey))
 
     except KeyboardInterrupt:
         queue.close()

@@ -40,7 +40,7 @@ Schema:
 """
 
 import time
-import json
+import ujson as json
 import numpy
 from collections import deque
 
@@ -99,6 +99,37 @@ def moving_average(values, window_size=WINDOW_SIZE_COMP):
     # calculating moving average an returning last value
     weights = numpy.repeat(1.0, window_size) / window_size
     return numpy.convolve(values, weights, 'valid')
+
+
+def get_consecutive(sorted_list):
+
+    aux = sorted_list[:]
+    result = []
+
+    try:
+        local = []
+        last = aux.pop(0)
+        local.append(last)
+
+        for i in aux:
+            if i - last == 1:
+                local.append(i)
+                last = i
+            else:
+                result.append(local)
+                local = [i]
+                last = i
+
+    except IndexError:
+        pass
+
+    return result
+
+
+def pattern_match(sid_list):
+
+    zip(sid_list, sid_list[1:])
+    
 
 
 class Notification(object):
@@ -242,6 +273,7 @@ class Notification(object):
     def correlated_events(self, event):
         #if self.MODE[mode] == self.MODE[3]:
         #     # speed threshold detection
+        print 1
 
     def check(self, speed, values):
 
@@ -275,3 +307,64 @@ class Notification(object):
 
         return cep_event
 
+
+class Aggregator(object):
+    def __init__(self, zmq_rcv, zmq_pub, verbose=False):
+        self._events = {}
+        self._receiver = zmq_rcv
+        self._publisher = zmq_pub
+        self.verbose = verbose
+
+    def __enter__(self):
+        self.start = time.time()
+
+        self.count_in = 0
+        self.count_out = 0
+        self.bytes_in = 0
+        self.bytes_out = 0
+        return self
+
+    def __exit__(self, *args):
+        self.end = time.time()
+
+        self.secs = self.end - self.start
+        self.msecs = self.secs * 1000  # millisecs
+        self.ratio_in = float(self.count_in / self.secs)
+        self.bratio_in = float(self.bytes_in / self.secs)
+        self.ratio_out = float(self.count_out / self.secs)
+        self.bratio_out = float(self.bytes_out / self.secs)
+        if self.verbose:
+            msg = LOG_STR.format(
+                self.msecs, self.count_in, self.count_out,
+                self.bytes_in, self.bytes_out, self.ratio_in,
+                self.ratio_out, self.bratio_in, self.bratio_out)
+            print msg
+
+    def register_event(self, sid, ts):
+        if ts not in self._events:
+            self._events[ts] = [sid]
+        elif sid not in self._events[ts]:
+            bisect.insort(self._events[ts], sid)
+        else:
+            pass
+
+        return
+
+    def receive(self):
+        rkey, message = self._receiver.recv_multipart()
+        self.count_in += 1
+        return rkey, json.loads(message)
+
+    def publish(self, rk, message):
+        self.count_out += 1
+        self._publisher.send_multipart(rk, message)
+
+    def check(self):
+
+        for ts in self._events:
+            for events in get_consecutive(self._events[ts]):
+                # TODO: events processing
+                print events
+
+            if 1:
+                del self._events[ts][:]
