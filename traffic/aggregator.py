@@ -45,7 +45,7 @@ __version__ = "1.0.0"
 __email__ = "nicoestrada.i@gmail.com"
 __status__ = "Development"
 
-WINDOW_SIZE = 900
+WINDOW_SIZE = 3600
 
 
 def run():
@@ -67,11 +67,11 @@ def run():
 
     try:
 
-        with Aggregator(rcv, pub, True) as agg:
+        with Aggregator(queue, pub, True) as agg:
             while True:
 
                 rkey, message = agg.receive()
-                print("[aggregator] Received message [%s] RKEY: [%s]" % (message, rkey))
+                # print("[aggregator] Received message [%s] RKEY: [%s]" % (message, rkey))
 
                 message['profiler']['aggregator_ts'] = time.time()
 
@@ -80,9 +80,13 @@ def run():
 
                 agg.register_event(sid, ts_key)
 
-                if agg.check():
-                    agg.publish([rkey, json.dumps(message)])
-                    print("[aggregator - db] Sent message [%s] RKEY: [%s]" % (message, rkey))
+                # patterns = agg.check(ts_key)
+
+                # if len(patterns):
+                #     for pattern in patterns:
+                #         print("[aggregator - pattern] Pattern found: %s" % (pattern,))
+                    # print("[aggregator - db] Sent message [%s] RKEY: [%s]" % (message, rkey))
+                    # agg.publish([rkey, json.dumps(message)])
 
     except KeyboardInterrupt:
         queue.close()

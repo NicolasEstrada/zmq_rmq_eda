@@ -122,7 +122,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-sid',
         '--sensor_id',
-        default=0,
+        default='',
         help='ID of sensor to be binded')
 
     args = parser.parse_args()

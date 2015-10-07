@@ -104,7 +104,7 @@ def run():
                         #     speed)
 
                         message = dict(
-                            sensor_id = str(sensor_id),
+                            sensor_id = int(sensor_id),
                             event_id = event_id,
                             speed = speed,
                             event_ts = (

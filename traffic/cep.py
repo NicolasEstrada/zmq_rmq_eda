@@ -91,7 +91,7 @@ def run():
         while True:
 
             rkey, message = rcv.recv_multipart()
-            print("[cep] Received message [%s] RKEY: [%s]" % (message, rkey))
+            # print("[cep] Received message [%s] RKEY: [%s]" % (message, rkey))
             message = json.loads(message)
 
             message['profiler']['data_ts'] = time.time()
@@ -109,8 +109,10 @@ def run():
                         cep_event['event']['routing_key'],
                         message)
 
+            # if cep_event['notify_id'] in conf.cep['events']['cep_agg']:
+            #     print("[cep] Sent message [%s] RKEY: [%s]" % (message, rkey))
+
             # pub.send_multipart([rkey, json.dumps(message)])
-            # print("[cep] Sent message [%s] RKEY: [%s]" % (message, rkey))
 
     except KeyboardInterrupt:
         rcv.close()

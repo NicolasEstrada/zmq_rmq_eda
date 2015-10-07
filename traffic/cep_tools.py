@@ -40,8 +40,9 @@ Schema:
 """
 
 import time
-import ujson as json
 import numpy
+import bisect
+import ujson as json
 from collections import deque
 
 # import redis
@@ -57,6 +58,7 @@ WARMUP = WINDOW_SIZE * .85
 WINDOW_SIZE_COMP = 10
 MIN_THRESHOLD = 5
 MAX_THESHOLD = 150
+LOG_STR = "{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}"
 
 
 def last_moving_average(values, window_size=WINDOW_SIZE):
@@ -106,30 +108,24 @@ def get_consecutive(sorted_list):
     aux = sorted_list[:]
     result = []
 
-    try:
-        local = []
-        last = aux.pop(0)
-        local.append(last)
+    local = []
+    last = int(aux.pop(0))
+    local.append(last)
 
-        for i in aux:
-            if i - last == 1:
-                local.append(i)
-                last = i
-            else:
-                result.append(local)
-                local = [i]
-                last = i
+    for i in aux:
+        if int(i) - last == 1:
+            local.append(i)
+            last = int(i)
+        else:
+            result.append(local)
+            local = [i]
+            last = int(i)
+    if local:
+        result.append(local)
 
-    except IndexError:
         pass
 
     return result
-
-
-def pattern_match(sid_list):
-
-    zip(sid_list, sid_list[1:])
-    
 
 
 class Notification(object):
@@ -145,13 +141,23 @@ class Notification(object):
             ),
         threshold = 10
         )
+    # INFO = dict(
+    #     notify_str = 'INFO',
+    #     log = '[INFO] values over 5 percent, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
+    #     notify_id = 10,
+    #     event = dict(
+    #         routing_key = 'info.avg',
+    #         actions = ['send_event', 'cep_agg']
+    #         ),
+    #     threshold = 10
+    #     )
     WARNING = dict(
         notify_str = 'WARNING',
         log = '[WARNING] values over 10 percent, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 1,
         event = dict(
             routing_key = 'warning.avg',
-            actions = ['send_event']
+            actions = ['send_event', 'cep_agg']
             ),
         threshold = 20
         )
@@ -161,7 +167,7 @@ class Notification(object):
         notify_id = 2,
         event = dict(
             routing_key = 'critical.avg',
-            actions = ['send_event']
+            actions = ['send_event', 'cep_agg']
             ),
         threshold = 50
         )
@@ -181,7 +187,7 @@ class Notification(object):
         notify_id = 4,
         event = dict(
             routing_key = 'exception.min',
-            actions = ['send_event']
+            actions = ['send_event' ,'cep_agg']
             ),
         threshold = MIN_THRESHOLD
         )
@@ -209,7 +215,7 @@ class Notification(object):
 
     EXCEPTION_AGG = dict(
         notify_str = 'EXCEPTION_AGG',
-        log = '[EXCEPTION_AGG] speeds levels out of boundaries for multipele correlated sensors, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
+        log = '[EXCEPTION_AGG] speeds levels out of boundaries for multiple correlated sensors, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 7,
         event = dict(
             routing_key = 'exception.agg',
@@ -340,11 +346,16 @@ class Aggregator(object):
                 self.ratio_out, self.bratio_in, self.bratio_out)
             print msg
 
+        found_patterns = self.check_all()
+
+        for pattern in found_patterns:
+            print("[aggregator - pattern] Pattern found: %s" % (pattern,))
+
     def register_event(self, sid, ts):
         if ts not in self._events:
-            self._events[ts] = [sid]
-        elif sid not in self._events[ts]:
-            bisect.insort(self._events[ts], sid)
+            self._events[ts] = [str(sid)]
+        elif str(sid) not in self._events[ts]:
+            bisect.insort(self._events[ts], str(sid))
         else:
             pass
 
@@ -359,12 +370,44 @@ class Aggregator(object):
         self.count_out += 1
         self._publisher.send_multipart(rk, message)
 
-    def check(self):
+    def check(self, ts):
+
+        pattern_matched = []
+
+        # for ts in self._events:
+        delete = False
+        for events in get_consecutive(self._events[ts]):
+            # TODO: events processing
+            if len(events) > 1:
+                pattern = ' -> '.join([str(e) for e in events])
+                pattern_matched.append(pattern)
+
+                delete = True
+
+        if delete:
+            del self._events[ts][:]
+
+        return pattern_matched
+
+    def check_all(self):
+
+        pattern_matched = []
 
         for ts in self._events:
+            delete = False
             for events in get_consecutive(self._events[ts]):
                 # TODO: events processing
-                print events
+                if len(events) > 1:
+                    pattern = ' -> '.join([str(e) for e in events])
+                    pattern_matched.append(pattern)
 
-            if 1:
+                    delete = True
+
+            if delete:
                 del self._events[ts][:]
+                delete = False
+
+        return pattern_matched
+
+    def print_matched(self):
+        print self._events

@@ -88,8 +88,8 @@ cep = dict(
 		),
 
 	events = dict (
-		send_event = (1, 2, 3, 4, 5, 6, 7),
-		cep_agg = (3,)
+		send_event = (1, 2, 3, 4, 5, 6, 7, 10),
+		cep_agg = (1, 2, 3, 4)
 		),
 
 	db = dict(
