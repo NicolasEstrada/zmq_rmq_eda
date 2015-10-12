@@ -99,20 +99,21 @@ def run():
             # cep processing: moving avg; min/max threshold speed
 
             speeds.append(message['speed'])  # replace using Redis
-            cep_event = notification.check(message['speed'], speeds)
 
-            # event shift (semantic, granularity and sliding windows)
-            for action in cep_event['event']['actions']:
+            # cep_event = notification.check(message['speed'], speeds)
 
-                if cep_event['notify_id'] in conf.cep['events'][action]:
-                    functions[action](
-                        cep_event['event']['routing_key'],
-                        message)
+            for cep_event in notification.check(message['speed'], speeds):
+                # event shift (semantic, granularity and sliding windows)
 
-            # if cep_event['notify_id'] in conf.cep['events']['cep_agg']:
-            #     print("[cep] Sent message [%s] RKEY: [%s]" % (message, rkey))
+                message.update({'notification': cep_event})
 
-            # pub.send_multipart([rkey, json.dumps(message)])
+                for action in cep_event['event']['actions']:
+
+                    if cep_event['notify_id'] in conf.cep['events'][action]:
+                        functions[action](
+                            cep_event['event']['routing_key'],
+                            message
+                            )
 
     except KeyboardInterrupt:
         rcv.close()

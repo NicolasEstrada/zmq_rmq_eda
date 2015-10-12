@@ -65,8 +65,8 @@ def run():
                 message['profiler']['data_ts'] = time.time()
 
                 data.write('{0},{1:.2f},{2},{3}'.format(
-                    message['sensor_id'],
-                    message['speed'],
+                    message.get('sensor_id'),
+                    message.get('speed', message.get('sensor_ids')),
                     message['event_ts'],
                     rkey) + '\n')
 

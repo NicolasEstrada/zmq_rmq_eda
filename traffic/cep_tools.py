@@ -131,6 +131,17 @@ def get_consecutive(sorted_list):
 class Notification(object):
     """Class for notification levels"""
 
+    RECOVERY = dict(
+        notify_str = 'RECOVERY',
+        log = '[RECOVERY] mv avg speed recovered, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
+        notify_id = -1,
+        event = dict(
+            routing_key = 'recovery.avg',
+            actions = ['send_event']
+            ),
+        threshold = 10
+        )
+
     IGNORE = dict(
         notify_str = 'OK',
         log = '[OK] Normal values, moving avg., |speed = {speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
@@ -141,23 +152,13 @@ class Notification(object):
             ),
         threshold = 10
         )
-    # INFO = dict(
-    #     notify_str = 'INFO',
-    #     log = '[INFO] values over 5 percent, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
-    #     notify_id = 10,
-    #     event = dict(
-    #         routing_key = 'info.avg',
-    #         actions = ['send_event', 'cep_agg']
-    #         ),
-    #     threshold = 10
-    #     )
     WARNING = dict(
         notify_str = 'WARNING',
         log = '[WARNING] values over 10 percent, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
         notify_id = 1,
         event = dict(
             routing_key = 'warning.avg',
-            actions = ['send_event', 'cep_agg']
+            actions = ['send_event']
             ),
         threshold = 20
         )
@@ -202,21 +203,10 @@ class Notification(object):
         threshold = MAX_THESHOLD
         )
 
-    RECOVERY = dict(
-        notify_str = 'RECOVERY',
-        log = '[RECOVERY] mv avg speed recovered, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
-        notify_id = 6,
-        event = dict(
-            routing_key = 'recovery.avg',
-            actions = ['send_event']
-            ),
-        threshold = 10
-        )
-
     EXCEPTION_AGG = dict(
         notify_str = 'EXCEPTION_AGG',
         log = '[EXCEPTION_AGG] speeds levels out of boundaries for multiple correlated sensors, |{speed:.2f} km/h (moving avg = {avg_speed:.2f} km/h)|',
-        notify_id = 7,
+        notify_id = 10,
         event = dict(
             routing_key = 'exception.agg',
             actions = ['send_event']
@@ -244,47 +234,42 @@ class Notification(object):
 
     def get_level(self, speed, variation):
 
-        # if self.MODE[mode] == self.MODE[1]:
-        #     # percent variation accoridng moving average
-
+        # evaluating threshold
         if speed < MIN_THRESHOLD:
-            return Notification.EXCEPTION_MIN
+            yield Notification.EXCEPTION_MIN
 
         elif speed > MAX_THESHOLD:
-            return Notification.EXCEPTION_MAX
+            yield Notification.EXCEPTION_MAX
 
-        elif variation < self.IGNORE['threshold']:
+        # evaluating moving average variation
+        if variation < self.IGNORE['threshold']:
+            # if recovered or still under traffic issues
             if (not self._last_notification_id
                 and self.RECOVERY['notify_id'] not in self._lasts_notifications_ids
                 and self._lasts_notifications_ids.count(
                         self.IGNORE['notify_id']) >= WARMUP):
 
-                return Notification.RECOVERY
+                yield Notification.RECOVERY
+
             else:
-                return Notification.IGNORE
+                yield Notification.IGNORE
 
         elif variation < self.WARNING['threshold']:
-            return Notification.WARNING
+            yield Notification.WARNING
 
         elif variation < self.CRITICAL['threshold']:
-            return Notification.CRITICAL
+            yield Notification.CRITICAL
 
         elif variation < self.EXCEPTION['threshold']:
-            return Notification.EXCEPTION
-
+            yield Notification.EXCEPTION
 
         else:
-            return Notification.IGNORE
-
-    def correlated_events(self, event):
-        #if self.MODE[mode] == self.MODE[3]:
-        #     # speed threshold detection
-        print 1
+            yield Notification.EXCEPTION
 
     def check(self, speed, values):
 
-        if not self._offset % WINDOW_SIZE:
-            # use simple average when amount of values is less that winow size
+        if self._offset < WINDOW_SIZE:
+            # use simple average when amount of values is less than window size
             self._mv_avg = last_moving_average(values)
             self._avg = numpy.average(values)
 
@@ -328,6 +313,7 @@ class Aggregator(object):
         self.count_out = 0
         self.bytes_in = 0
         self.bytes_out = 0
+        self._offset = 1
         return self
 
     def __exit__(self, *args):
@@ -408,6 +394,41 @@ class Aggregator(object):
                 delete = False
 
         return pattern_matched
+
+    def get_all_aggregated(self, ts, wsize):
+
+        for ts in self._events:
+            delete = False
+            for events in get_consecutive(self._events[ts]):
+                if len(events) > 1:
+
+                    message = dict(
+                        sensor_id = -1,
+                        event_id = self._offset,
+                        sensor_ids = events,
+                        event_ts = ts,
+                        event_ts_upper = ts + window_size,
+                        notification = Notification.EXCEPTION_AGG,
+
+                        profiler = dict(
+                            created_ts = time.time())
+                        )
+
+                    print '({0:0>6})[{1} - {2}]: | {3} |'.format(
+                        message['event_id'],
+                        arrow.get(message['event_ts']).strftime('%Y-%m-%d %H:%M:%S'),
+                        arrow.get(message['event_ts_upper']).strftime('%Y-%m-%d %H:%M:%S'),
+                        ' -> '.join(events)
+                        )
+
+                    self._offset += 1
+                    delete = True
+
+                    yield message
+
+            if delete:
+                del self._events[ts][:]
+                delete = False
 
     def print_matched(self):
         print self._events

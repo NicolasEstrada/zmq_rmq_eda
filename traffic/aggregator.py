@@ -65,6 +65,12 @@ def run():
     )
     pub.connect("tcp://{host}:{port}".format(**conf.aggregator['outgoing']))
 
+    functions = {
+        'send_event': lambda rk, msg: pub.send_multipart([rk, json.dumps(msg)])
+    }
+
+    ts_base = None
+
     try:
 
         with Aggregator(queue, pub, True) as agg:
@@ -73,12 +79,31 @@ def run():
                 rkey, message = agg.receive()
                 # print("[aggregator] Received message [%s] RKEY: [%s]" % (message, rkey))
 
+                message = json.loads(message)
                 message['profiler']['aggregator_ts'] = time.time()
 
                 sid = message['sensor_id']
                 ts_key = message['event_ts'] - message['event_ts'] % WINDOW_SIZE
 
                 agg.register_event(sid, ts_key)
+
+                if ts_base is None:
+                    ts_base = ts_key
+                else:
+                    if not ts_base == ts_key and ts_key > ts_base:
+
+                        for agg_event in agg.get_all(ts_base, WINDOW_SIZE):
+
+                            for action in agg_event['notification']['actions']:
+                                function[action](
+                                    agg_event['notification']['routing_key'],
+                                    message
+                                    )
+
+                        ts_base = ts_key
+
+                    else:
+                        pass
 
                 # patterns = agg.check(ts_key)
 
