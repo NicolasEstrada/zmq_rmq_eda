@@ -354,7 +354,7 @@ class Aggregator(object):
 
     def publish(self, rk, message):
         self.count_out += 1
-        self._publisher.send_multipart(rk, message)
+        self._publisher.send_multipart(rk, json.dumps(message))
 
     def check(self, ts):
 
@@ -395,40 +395,39 @@ class Aggregator(object):
 
         return pattern_matched
 
-    def get_all_aggregated(self, ts, wsize):
+    def send_all_aggregated(self, ts, wsize):
 
-        for ts in self._events:
+        delete = False
+        for events in get_consecutive(self._events[ts]):
+            if len(events) > 1:
+
+                message = dict(
+                    sensor_id = -1,
+                    event_id = self._offset,
+                    sensor_ids = events,
+                    event_ts = ts,
+                    event_ts_upper = ts + window_size,
+                    notification = Notification.EXCEPTION_AGG,
+
+                    profiler = dict(
+                        created_ts = time.time())
+                    )
+
+                print '({0:0>6})[{1} - {2}]: | {3} |'.format(
+                    message['event_id'],
+                    arrow.get(message['event_ts']).strftime('%Y-%m-%d %H:%M:%S'),
+                    arrow.get(message['event_ts_upper']).strftime('%Y-%m-%d %H:%M:%S'),
+                    ' -> '.join(events)
+                    )
+
+                self._offset += 1
+                delete = True
+
+                yield message
+
+        if delete:
+            del self._events[ts][:]
             delete = False
-            for events in get_consecutive(self._events[ts]):
-                if len(events) > 1:
-
-                    message = dict(
-                        sensor_id = -1,
-                        event_id = self._offset,
-                        sensor_ids = events,
-                        event_ts = ts,
-                        event_ts_upper = ts + window_size,
-                        notification = Notification.EXCEPTION_AGG,
-
-                        profiler = dict(
-                            created_ts = time.time())
-                        )
-
-                    print '({0:0>6})[{1} - {2}]: | {3} |'.format(
-                        message['event_id'],
-                        arrow.get(message['event_ts']).strftime('%Y-%m-%d %H:%M:%S'),
-                        arrow.get(message['event_ts_upper']).strftime('%Y-%m-%d %H:%M:%S'),
-                        ' -> '.join(events)
-                        )
-
-                    self._offset += 1
-                    delete = True
-
-                    yield message
-
-            if delete:
-                del self._events[ts][:]
-                delete = False
 
     def print_matched(self):
         print self._events
