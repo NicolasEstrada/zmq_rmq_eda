@@ -120,10 +120,9 @@ def get_consecutive(sorted_list):
             result.append(local)
             local = [i]
             last = int(i)
+
     if local:
         result.append(local)
-
-        pass
 
     return result
 
